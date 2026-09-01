@@ -1,0 +1,117 @@
+# =========================
+# Maven
+# =========================
+
+target/
+.mvn/wrapper/maven-wrapper.jar
+
+
+# =========================
+# Eclipse / Spring Tool Suite
+# =========================
+
+.classpath
+.project
+.settings/
+.factorypath
+.apt_generated/
+.springBeans
+.sts4-cache/
+
+
+# =========================
+# IntelliJ IDEA
+# =========================
+
+.idea/
+*.iml
+*.iws
+*.ipr
+
+
+# =========================
+# VS Code
+# =========================
+
+.vscode/
+
+
+# =========================
+# NetBeans
+# =========================
+
+/nbproject/private/
+/nbbuild/
+/dist/
+/nbdist/
+/.nb-gradle/
+
+
+# =========================
+# Gradle
+# =========================
+
+.gradle/
+build/
+
+
+# =========================
+# Java
+# =========================
+
+*.class
+
+
+# =========================
+# Logs
+# =========================
+
+*.log
+
+
+# =========================
+# OS generated files
+# =========================
+
+.DS_Store
+Thumbs.db
+desktop.ini
+
+
+# =========================
+# Application configuration
+# =========================
+
+
+src/main/resources/application.properties
+
+
+# =========================
+# Environment / secrets
+# =========================
+
+.env
+.env.*
+!.env.example
+
+
+# =========================
+# Temporary files
+# =========================
+
+*.tmp
+*.temp
+*.swp
+*.swo
+*~
+
+
+# =========================
+# Certificates / keystores
+# =========================
+
+*.pem
+*.key
+*.p12
+*.jks
+*.keystore
