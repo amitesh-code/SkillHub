@@ -14,7 +14,9 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.project.SkillHub.Model.Course;
 import com.project.SkillHub.Model.Enrollment;
+import com.project.SkillHub.Model.Student;
 import com.project.SkillHub.Service.IenrollmentService;
 
 @RestController
@@ -71,6 +73,19 @@ public class Enrollmentcontroller {
 
         return new ResponseEntity<String>(
                 status, HttpStatus.OK);
+    }
+    @GetMapping("/enrolledstudent/{courseId}")
+    public ResponseEntity<List>getstudentenrolledinCourse(@PathVariable Long courseId){
+    	
+    	List<Student>ls=service.enrolledinCourse(courseId);
+    	
+    	return new ResponseEntity<List>(ls,HttpStatus.OK);
+    	
+    }
+    @GetMapping("/coursesofstudent/{studentId}")
+    public ResponseEntity<List>getcoursesbasedonstudentId(@PathVariable("studentId")Long studentId){
+    	List<Course>ls=service.fetchcoursesbystudent_id(studentId);
+    	return new ResponseEntity<List>(ls,HttpStatus.OK);
     }
 }
 

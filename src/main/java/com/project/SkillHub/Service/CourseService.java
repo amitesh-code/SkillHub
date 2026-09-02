@@ -50,7 +50,7 @@ public class CourseService implements IcourseService {
 	@Override
 	public Course getCourseByid(Long id)  {
 		
-		   Optional<Course> optional = repo.findById(id);
+		   Optional<Course> optional = repo.findByIdAndActiveTrue(id);
 		   if(optional.isPresent()) {
 			   return optional.get();
 		   }
@@ -61,14 +61,14 @@ public class CourseService implements IcourseService {
 
 	@Override
 	public List<Course> getAllCourse() {
-		return repo.findAll();
+		return repo.findByActiveTrue();
 		
 	}
 
 	@Override
 	public String updateCourseid(Long id, Course course) {
 		
-	     Optional<Course> optional = repo.findById(id);
+	     Optional<Course> optional = repo.findByIdAndActiveTrue(id);
 	     if(optional.isPresent()) {
 	    	 Course existingCourse = optional.get();
 
@@ -87,11 +87,12 @@ public class CourseService implements IcourseService {
 
 	@Override
 	public String deleteCoursebyid(Long id) {
-		Optional<Course> optional = repo.findById(id);
+		Optional<Course> optional = repo.findByIdAndActiveTrue(id);
 		if(optional.isPresent()) {
-			repo.deleteById(id);
+		    optional.get().setActive(false);
+		    repo.save(optional.get());
 			
-			return "Course with given id,deleted sucessfully!";
+			return "Course with given id,deactivated sucessfully!";
 		}
 		throw new CourseNotFoundException(
 			    "Course with id " + id + " is not found!"
@@ -101,13 +102,13 @@ public class CourseService implements IcourseService {
 	@Override
 	public List<Course> fetchByTenet_id(Long Tenetid) {
 		
-		return repo.findByTenant_Id(Tenetid);
+		return repo.findByTenant_IdAndActiveTrue(Tenetid);
 		
 	}
 
 	@Override
 	public String assignInstructors(Long courseId, List<Long> instructorIds) {
-		   Optional<Course> opt = repo.findById(courseId);
+		   Optional<Course> opt = repo.findByIdAndActiveTrue(courseId);
 		   if(opt.isEmpty()) {
 			   throw new CourseNotFoundException("Course with id: "+ courseId +"Not found");
 		   }
@@ -141,6 +142,20 @@ public class CourseService implements IcourseService {
 		repo.save(course);
 		 return "Instructors successfully assigned to course with id: " + courseId;
 	}
+
+	@Override
+	public List<Course> fetchbyisntructorid(Long instructorId) {
+		
+		Optional<Instructor> optional = instrepo.findById(instructorId);
+		if(optional.isEmpty()) {
+			throw new InstructorNotFoundException("insturcotor with id:"+instructorId+"not found");
+		}
+		List<Course>instructors=repo.findByInstructors_id(instructorId);
+		return instructors;
+		
+	}
+
+	
 
 	
 

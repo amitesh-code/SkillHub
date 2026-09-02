@@ -15,6 +15,8 @@ import org.springframework.web.bind.annotation.RestController;
 import com.project.SkillHub.Model.Course;
 import com.project.SkillHub.Service.IcourseService;
 
+import jakarta.validation.Valid;
+
 import java.util.List;
 
 @RestController
@@ -30,7 +32,7 @@ public class Courscontroller {
 	}
 	
 	@PostMapping("/add/{tenant_id}")
-	public ResponseEntity<String>addCourse(@RequestBody Course course,@PathVariable("tenant_id")Long tenant_id){
+	public ResponseEntity<String>addCourse(@Valid @RequestBody Course course,@PathVariable("tenant_id")Long tenant_id){
 		
 		String status=service.CreateCourse(tenant_id,course);
 		return new ResponseEntity<String>(status,HttpStatus.CREATED);
@@ -50,7 +52,7 @@ public class Courscontroller {
 	}
 	
 	@PutMapping("/updatebyid/{id}")
-	public ResponseEntity<String>updatebyid(@PathVariable Long id,@RequestBody Course course){
+	public ResponseEntity<String>updatebyid(@PathVariable Long id,@Valid @RequestBody Course course){
 		
 		String status=service.updateCourseid(id, course);
 		return new ResponseEntity<String>(status,HttpStatus.OK);
@@ -78,5 +80,11 @@ public ResponseEntity<String>deletebyid(@PathVariable Long id){
 	    String status = service.assignInstructors(courseId, instructorIds);
 
 	    return new ResponseEntity<String>(status, HttpStatus.OK);
+	}
+	@GetMapping("/courses/{instructorId}")
+	public ResponseEntity<List>getcoursesbasedoninstructorsid(@PathVariable("instructorId")Long instructorId){
+		
+		List<Course>courses=service.fetchbyisntructorid(instructorId);
+		return new ResponseEntity<List>(courses,HttpStatus.OK);
 	}
 }

@@ -6,6 +6,8 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
 
 @Entity
 public class Instructor {
@@ -13,9 +15,14 @@ public class Instructor {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
+	@NotBlank(message="name is required")
 	private String name;
+	@NotBlank(message="email is required")
+	@Email(message="emil should be valid")
 	private String email;
+	@NotBlank(message="phone no is required")
 	private String phone;
+	@NotBlank(message="expertise is required")
 	private String expertise;
 	
 	@ManyToOne

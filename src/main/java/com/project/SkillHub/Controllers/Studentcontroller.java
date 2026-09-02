@@ -17,6 +17,8 @@ import org.springframework.web.bind.annotation.RestController;
 import com.project.SkillHub.Model.Student;
 import com.project.SkillHub.Service.IstudentService;
 
+import jakarta.validation.Valid;
+
 @RestController
 @RequestMapping("/StudentController")
 public class Studentcontroller {
@@ -29,7 +31,7 @@ public class Studentcontroller {
 
 	    @PostMapping("/add/{tenant_id}")
 	    public ResponseEntity<String> addStudent(
-	            @RequestBody Student student,
+	    		@Valid @RequestBody Student student,
 	            @PathVariable("tenant_id") Long tenant_id) {
 
 	        String status = service.createStudent(tenant_id, student);
@@ -67,7 +69,7 @@ public class Studentcontroller {
 	    @PutMapping("/updatebyid/{id}")
 	    public ResponseEntity<String> updateStudent(
 	            @PathVariable Long id,
-	            @RequestBody Student student) {
+	            @Valid @RequestBody Student student) {
 
 	        String status = service.updateStudent(id, student);
 

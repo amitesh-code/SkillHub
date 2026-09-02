@@ -1,5 +1,6 @@
 package com.project.SkillHub.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -39,9 +40,9 @@ public class EnrollmentService implements IenrollmentService {
 		if(opt.isEmpty()) {
 			throw new StudentNotFoundException("Student with id :"+studentId+"Not found ");
 		}
-		Optional<Course> copt = courserepo.findById(courseId);
+		Optional<Course> copt = courserepo.findByIdAndActiveTrue(courseId);
 		if(copt.isEmpty()) {
-			throw new CourseNotFoundException("Course with id: "+courseId+"Not found");
+			throw new CourseNotFoundException("Active Course with id: "+courseId+"Not found");
 		}
 		
 		Student student=opt.get();
@@ -121,6 +122,51 @@ public class EnrollmentService implements IenrollmentService {
 	    );
 	
 	}
+
+	@Override
+	public List<Student> enrolledinCourse(Long courseId) {
+
+	    Optional<Course> optional = courserepo.findById(courseId);
+
+	    if (optional.isEmpty()) {
+	        throw new CourseNotFoundException(
+	            "Course with id: " + courseId + " not found"
+	        );
+	    }
+
+	    List<Enrollment> enrollments = repo.findByCourse_Id(courseId);
+
+	    List<Student> enrolledStudents = new ArrayList<>();
+
+	    for (Enrollment enrollment : enrollments) {
+	        enrolledStudents.add(enrollment.getStudent());
+	    }
+
+	    return enrolledStudents;
+	}
+
+	@Override
+	public List<Course> fetchcoursesbystudent_id(Long studentId) {
+		// TODO Auto-generated method stub
+		  Optional<Student> optional = studentrepo.findById(studentId);
+
+		    if (optional.isEmpty()) {
+		        throw new StudentNotFoundException(
+		            "Student with id: " + studentId + " not found"
+		        );
+		    }
+
+		    List<Enrollment> enrollments= repo.findByStudent_Id(studentId);
+
+		    List<Course> courses = new ArrayList<>();
+
+		    for (Enrollment enrollment : enrollments) {
+		        courses.add(enrollment.getCourse());
+		    }
+
+		return courses;
+	}
+	
 
 	
 }

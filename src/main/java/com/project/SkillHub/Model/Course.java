@@ -14,6 +14,9 @@ import jakarta.persistence.JoinColumns;
 import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
 
 @Entity
 public class Course {
@@ -21,10 +24,16 @@ public class Course {
 	@Id
 	@GeneratedValue(strategy=GenerationType.IDENTITY)
    private Long id;
+	@NotBlank(message="name is required")
    private String name;
+	@NotBlank(message="description is required")
    private String description;
+	@NotBlank(message="duration is required")
    private String duration;
+	@NotNull(message = "Price is required")
+	@Positive(message = "Price must be greater than zero")
    private Double price;
+   private Boolean active=true;
    
    //Many courses can belong to one tenant.
    @ManyToOne
@@ -56,6 +65,15 @@ public class Course {
 	public void setTenant(Tenant tenant) {
 	    this.tenant = tenant;
 	}
+	
+   public Boolean getActive() {
+		return active;
+	}
+
+	public void setActive(Boolean active) {
+		this.active = active;
+	}
+
    public Long getId() {
 	return id;
    }
@@ -90,6 +108,13 @@ public class Course {
 	super();
 	// TODO Auto-generated constructor stub
    }
+   
+   @Override
+   public String toString() {
+	return "Course [id=" + id + ", name=" + name + ", description=" + description + ", duration=" + duration
+			+ ", price=" + price + "]";
+   }
+
    public Course(Long id, String name, String description, String duration, Double price) {
 	super();
 	this.id = id;
@@ -97,11 +122,6 @@ public class Course {
 	this.description = description;
 	this.duration = duration;
 	this.price = price;
-   }
-   @Override
-   public String toString() {
-	return "Course [id=" + id + ", name=" + name + ", description=" + description + ", duration=" + duration
-			+ ", price=" + price + "]";
    }
    
 

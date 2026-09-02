@@ -16,4 +16,6 @@ public interface IinstructorService {
 	    String updateInstructor(Long id, Instructor instructor);
 
 	    String deleteInstructorById(Long id);
+	    
+	    
 }

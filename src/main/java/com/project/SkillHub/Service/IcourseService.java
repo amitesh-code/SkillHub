@@ -17,4 +17,6 @@ public interface IcourseService {
 	
 	String assignInstructors(Long courseId, List<Long> instructorIds);
 	
+	List<Course>fetchbyisntructorid(Long instructorId);
+	
 }

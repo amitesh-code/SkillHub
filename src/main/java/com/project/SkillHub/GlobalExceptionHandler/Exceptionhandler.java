@@ -1,9 +1,13 @@
 package com.project.SkillHub.GlobalExceptionHandler;
 
 import java.time.LocalDateTime;
+import java.util.List;
+import java.util.stream.Collectors;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.FieldError;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
@@ -50,14 +54,34 @@ public class Exceptionhandler {
 	}
 	@ExceptionHandler(TenantMismatchExcpetion.class)
 	public ResponseEntity<ErrorDetails>handleTenantMismatchException(TenantMismatchExcpetion ex){
-		ErrorDetails erd=new ErrorDetails("404 Not Found",ex.getMessage(),LocalDateTime.now());
+		ErrorDetails erd=new ErrorDetails("403 Forbidden",ex.getMessage(),LocalDateTime.now());
 		
-		return new ResponseEntity<ErrorDetails>(erd,HttpStatus.NOT_FOUND);
+		return new ResponseEntity<ErrorDetails>(erd,HttpStatus.FORBIDDEN);
+	}
+	@ExceptionHandler(MethodArgumentNotValidException.class)
+	public ResponseEntity<ErrorDetails>handleValidationException(MethodArgumentNotValidException ex){
+//		List<FieldError>errors=(List<FieldError>) ex.getBindingResult().getFieldError();
+//		
+//		StringBuilder msg=new StringBuilder();
+//		
+//		for(FieldError error:errors) {
+//			msg.append(error.getDefaultMessage());
+//			msg.append(",");
+//		}
+//		String message=msg.toString();
+		// easy way to write this
+		 String message=ex.getBindingResult().getFieldErrors()
+				 .stream()
+				 .map(error->error.getDefaultMessage())
+				 .collect(Collectors.joining(","));
+		ErrorDetails erd=new ErrorDetails("403 Bad Request",message,LocalDateTime.now());
+		
+		return new ResponseEntity<ErrorDetails>(erd,HttpStatus.FORBIDDEN);
 	}
 	@ExceptionHandler(Exception.class)
 	public ResponseEntity<ErrorDetails>handleException(Exception ex){
 		
-		ErrorDetails erd=new ErrorDetails("Internal server error",ex.getMessage(),LocalDateTime.now());
+		ErrorDetails erd=new ErrorDetails(" 500 Internal server error",ex.getMessage(),LocalDateTime.now());
 		
 		return new ResponseEntity<ErrorDetails>(erd,HttpStatus.INTERNAL_SERVER_ERROR);
 	}

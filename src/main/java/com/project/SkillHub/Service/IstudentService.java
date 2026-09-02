@@ -2,6 +2,7 @@ package com.project.SkillHub.Service;
 
 import java.util.List;
 
+import com.project.SkillHub.Model.Course;
 import com.project.SkillHub.Model.Student;
 
 public interface IstudentService {
@@ -16,4 +17,6 @@ public interface IstudentService {
     String updateStudent(Long id, Student student);
 
     String deleteStudentById(Long id);
+    
+  
 }

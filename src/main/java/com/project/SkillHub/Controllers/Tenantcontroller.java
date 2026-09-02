@@ -17,6 +17,8 @@ import org.springframework.web.bind.annotation.RestController;
 import com.project.SkillHub.Model.Tenant;
 import com.project.SkillHub.Service.ItenantService;
 
+import jakarta.validation.Valid;
+
 @RestController
 @RequestMapping("/TenantController")
 public class Tenantcontroller {
@@ -32,8 +34,9 @@ public class Tenantcontroller {
 	
 	
 	@PostMapping("/add")
-	public ResponseEntity<String>createTenant(@RequestBody Tenant tenant){
+	public ResponseEntity<String>createTenant(@Valid @RequestBody Tenant tenant){
 		String status=service.createTenant(tenant);
+		
 		
 		return new ResponseEntity<String>(status,HttpStatus.CREATED);
 	}
@@ -52,7 +55,7 @@ public class Tenantcontroller {
 	}
 	
 	@PutMapping("/updatebyid/{id}")
-	public ResponseEntity<String>updatebyid(@PathVariable Long id,@RequestBody Tenant tenant){
+	public ResponseEntity<String>updatebyid(@PathVariable Long id,@Valid @RequestBody Tenant tenant){
 		
 		String status=service.updateTenant(id, tenant);
 		return new ResponseEntity<String>(status,HttpStatus.OK);

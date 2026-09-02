@@ -19,6 +19,8 @@ import com.project.SkillHub.Model.Instructor;
 
 import com.project.SkillHub.Service.IinstructorService;
 
+import jakarta.validation.Valid;
+
 @RestController
 @RequestMapping("/InstructorController")
 public class Instructorcontroller {
@@ -29,7 +31,7 @@ public class Instructorcontroller {
 	
 	
 	@PostMapping("/add/{tenant_id}")
-	public ResponseEntity<String>addInstructor(@RequestBody Instructor instructor,@PathVariable("tenant_id")Long tenant_id){
+	public ResponseEntity<String>addInstructor( @Valid @RequestBody Instructor instructor,@PathVariable("tenant_id")Long tenant_id){
 		
 		String status=service.createInstructor(tenant_id, instructor);
 		return new ResponseEntity<String>(status,HttpStatus.CREATED);
@@ -49,7 +51,7 @@ public class Instructorcontroller {
 	}
 	
 	@PutMapping("/updatebyid/{id}")
-	public ResponseEntity<String>updatebyid(@PathVariable Long id,@RequestBody Instructor instructor){
+	public ResponseEntity<String>updatebyid(@PathVariable Long id,@Valid @RequestBody Instructor instructor){
 		
 		String status=service.updateInstructor(id, instructor);
 		return new ResponseEntity<String>(status,HttpStatus.OK);
