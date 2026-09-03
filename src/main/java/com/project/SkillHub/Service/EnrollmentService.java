@@ -1,5 +1,6 @@
 package com.project.SkillHub.Service;
 
+import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -7,12 +8,19 @@ import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.project.SkillHub.DTO.CourseResponseDTO;
+import com.project.SkillHub.DTO.EnrollmentRequestDTO;
+import com.project.SkillHub.DTO.EnrollmentResponseDTO;
+import com.project.SkillHub.DTO.InstructorResponseDTO;
+import com.project.SkillHub.DTO.StudentResponseDTO;
 import com.project.SkillHub.Exception.CourseNotFoundException;
 import com.project.SkillHub.Exception.EnrollmentNotFoundException;
 import com.project.SkillHub.Exception.StudentNotFoundException;
 import com.project.SkillHub.Exception.TenantMismatchExcpetion;
 import com.project.SkillHub.Model.Course;
 import com.project.SkillHub.Model.Enrollment;
+import com.project.SkillHub.Model.EnrollmentStatus;
+import com.project.SkillHub.Model.Instructor;
 import com.project.SkillHub.Model.Student;
 import com.project.SkillHub.Repo.CourseRepo;
 import com.project.SkillHub.Repo.EnrollmentRepo;
@@ -33,16 +41,52 @@ public class EnrollmentService implements IenrollmentService {
 		this.studentrepo = studentrepo;
 		this.courserepo = courserepo;
 	}
+	//Instructor->InstructorResponseDTO
+	private List<InstructorResponseDTO>getInstructorResponseDto(List<Instructor>instructors) {
+	      List<InstructorResponseDTO>response=new ArrayList<>();
+			
+			for(Instructor instr:instructors) {
+				InstructorResponseDTO dto=new InstructorResponseDTO();
+				dto.setEmail(instr.getEmail());
+				dto.setExpertise(instr.getExpertise());
+				dto.setPhone(instr.getPhone());
+				dto.setId(instr.getId());
+				response.add(dto);
+			}
+			return response;
+		}
+	//Course->CourseResponseDTO
+	private CourseResponseDTO getcourseresponsedto(Course cs) {
+	CourseResponseDTO dto=new CourseResponseDTO();
+		
+		dto.setActive(cs.getActive());
+		dto.setId(cs.getId());
+		dto.setName(cs.getName());
+		dto.setPrice(cs.getPrice());
+		dto.setDescription(cs.getDescription());
+		dto.setDuration(cs.getDuration());
+		dto.setInstructors(getInstructorResponseDto(cs.getInstructors()));
+		return dto;
+	}
+	//Student->StudentResponseEntity
+    private StudentResponseDTO getstudentresponsedto(Student current) {
+    	StudentResponseDTO str=new StudentResponseDTO();
+		 str.setId(current.getId());
+		 str.setName(current.getName());
+		 str.setEmail(current.getEmail());
+		 str.setPhone(current.getPhone());
+          return str;
+    }
 
 	@Override
-	public String createEnrollment(Long studentId, Long courseId, Enrollment enrollment) {
-		Optional<Student> opt = studentrepo.findById(studentId);
+	public String createEnrollment( EnrollmentRequestDTO enrollment) {
+		Optional<Student> opt = studentrepo.findById(enrollment.getStudentId());
 		if(opt.isEmpty()) {
-			throw new StudentNotFoundException("Student with id :"+studentId+"Not found ");
+			throw new StudentNotFoundException("Student with id :"+enrollment.getStudentId()+"Not found ");
 		}
-		Optional<Course> copt = courserepo.findByIdAndActiveTrue(courseId);
+		Optional<Course> copt = courserepo.findByIdAndActiveTrue(enrollment.getCourseId());
 		if(copt.isEmpty()) {
-			throw new CourseNotFoundException("Active Course with id: "+courseId+"Not found");
+			throw new CourseNotFoundException("Active Course with id: "+enrollment.getCourseId()+"Not found");
 		}
 		
 		Student student=opt.get();
@@ -53,34 +97,57 @@ public class EnrollmentService implements IenrollmentService {
 		if(!studentTenantId.equals(courseTenantId)) {
 			throw new TenantMismatchExcpetion("student and course belong to different tenants");
 		}
-		if(repo.existsByStudent_IdAndCourse_Id(studentId, courseId)) {
+		if(repo.existsByStudent_IdAndCourse_Id(enrollment.getStudentId(), enrollment.getCourseId())) {
 			return "Student is already enrolled in this courses";
 		}
 		
+		Enrollment enr=new Enrollment();
+		enr.setCourse(course);
+		enr.setStudent(student);
+		enr.setStatus(EnrollmentStatus.ACTIVE);
+		enr.setEnrollmentDate(LocalTime.now().toString());
 		
 		
-		enrollment.setCourse(course);
-		enrollment.setStudent(student);
-		Enrollment enr = repo.save(enrollment);
+		Enrollment saved = repo.save(enr);
 		return "Enrollment added successfully with id:"+enr.getId();
 	}
 
 	@Override
-	public Enrollment getEnrollmentById(Long id) {
+	public EnrollmentResponseDTO getEnrollmentById(Long id) {
 
 	    Optional<Enrollment> optional = repo.findById(id);
-
-	    return optional.orElseThrow(
-	        () -> new EnrollmentNotFoundException(
-	            "Enrollment with id: " + id + " not found"
-	        )
-	    );
+	  
+	    if(optional.isEmpty()) {
+	    	throw new EnrollmentNotFoundException("enrollment with id:"+id+"Not found");
+	    }
+	    Enrollment enrl=optional.get();
+	    EnrollmentResponseDTO dto=new EnrollmentResponseDTO();
+	    dto.setId(enrl.getId());
+	    dto.setCourse(getcourseresponsedto(enrl.getCourse()));
+	    dto.setStatus(enrl.getStatus().name());
+	    dto.setStudent(getstudentresponsedto(enrl.getStudent()));
+	    dto.setEnrollmentDate(enrl.getEnrollmentDate());
+	    return dto;
+	    
+	    
+	   
 	}
 
 	@Override
-	public List<Enrollment> getAllEnrollments() {
+	public List<EnrollmentResponseDTO> getAllEnrollments() {
 
-	    return repo.findAll();
+	    List<Enrollment>enrollments=repo.findAll();
+	    List<EnrollmentResponseDTO>response=new ArrayList<>();
+	    for(Enrollment enrl:enrollments) {
+	    	EnrollmentResponseDTO enr = new EnrollmentResponseDTO();
+	    	enr.setCourse(getcourseresponsedto(enrl.getCourse()));
+	    	enr.setId(enrl.getId());
+	    	enr.setStatus(enrl.getStatus().name());
+	    	enr.setStudent(getstudentresponsedto(enrl.getStudent()));
+	    	enr.setEnrollmentDate(enrl.getEnrollmentDate());
+	    	response.add(enr);
+	    }
+	    return response;
 	}
 
 	@Override
@@ -124,7 +191,7 @@ public class EnrollmentService implements IenrollmentService {
 	}
 
 	@Override
-	public List<Student> enrolledinCourse(Long courseId) {
+	public List<StudentResponseDTO> enrolledinCourse(Long courseId) {
 
 	    Optional<Course> optional = courserepo.findById(courseId);
 
@@ -132,21 +199,23 @@ public class EnrollmentService implements IenrollmentService {
 	        throw new CourseNotFoundException(
 	            "Course with id: " + courseId + " not found"
 	        );
+	        
+	        
 	    }
 
 	    List<Enrollment> enrollments = repo.findByCourse_Id(courseId);
 
-	    List<Student> enrolledStudents = new ArrayList<>();
+	    List<StudentResponseDTO>sdto=new ArrayList<>();
 
 	    for (Enrollment enrollment : enrollments) {
-	        enrolledStudents.add(enrollment.getStudent());
+	        sdto.add(getstudentresponsedto(enrollment.getStudent()));
 	    }
 
-	    return enrolledStudents;
+	    return sdto;
 	}
 
 	@Override
-	public List<Course> fetchcoursesbystudent_id(Long studentId) {
+	public List<CourseResponseDTO> fetchcoursesbystudent_id(Long studentId) {
 		// TODO Auto-generated method stub
 		  Optional<Student> optional = studentrepo.findById(studentId);
 
@@ -158,13 +227,49 @@ public class EnrollmentService implements IenrollmentService {
 
 		    List<Enrollment> enrollments= repo.findByStudent_Id(studentId);
 
-		    List<Course> courses = new ArrayList<>();
+		    List<CourseResponseDTO> courses = new ArrayList<>();
 
 		    for (Enrollment enrollment : enrollments) {
-		        courses.add(enrollment.getCourse());
+		        courses.add(getcourseresponsedto(enrollment.getCourse()));
 		    }
 
 		return courses;
+	}
+
+	@Override
+	public String completeEnrollment(Long id) {
+		 Optional<Enrollment> optional = repo.findById(id);
+		 if(optional.isEmpty()) {
+			 throw new EnrollmentNotFoundException("Enrollment with id:"+id+"not found ");
+		 }
+		 Enrollment enrollment=optional.get();
+		 if (enrollment.getStatus() != EnrollmentStatus.ACTIVE) {
+		        return "Only active enrollment can be completed";
+		    }
+
+		    enrollment.setStatus(EnrollmentStatus.COMPLETED);
+
+		    repo.save(enrollment);
+
+		    return "Enrollment completed successfully";
+	}
+
+	@Override
+	public String cancelEnrollment(Long id) {
+		 Optional<Enrollment> optional = repo.findById(id);
+		 if(optional.isEmpty()) {
+			 throw new EnrollmentNotFoundException("Enrollment with id:"+id+"not found ");
+		 }
+		 Enrollment enrollment=optional.get();
+		 if (enrollment.getStatus() != EnrollmentStatus.ACTIVE) {
+		        return "Only active enrollment can be completed";
+		    }
+
+		    enrollment.setStatus(EnrollmentStatus.CANCELLED);
+
+		    repo.save(enrollment);
+
+		    return "Enrollment canceled successfully";
 	}
 	
 

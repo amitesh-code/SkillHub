@@ -14,6 +14,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.project.SkillHub.DTO.StudentRequestDTO;
+import com.project.SkillHub.DTO.StudentResponseDTO;
 import com.project.SkillHub.Model.Student;
 import com.project.SkillHub.Service.IstudentService;
 
@@ -31,7 +33,7 @@ public class Studentcontroller {
 
 	    @PostMapping("/add/{tenant_id}")
 	    public ResponseEntity<String> addStudent(
-	    		@Valid @RequestBody Student student,
+	    		@Valid @RequestBody StudentRequestDTO student,
 	            @PathVariable("tenant_id") Long tenant_id) {
 
 	        String status = service.createStudent(tenant_id, student);
@@ -40,36 +42,36 @@ public class Studentcontroller {
 	    }
 
 	    @GetMapping("/getall")
-	    public ResponseEntity<List<Student>> getAllStudents() {
+	    public ResponseEntity<List<StudentResponseDTO>> getAllStudents() {
 
-	        List<Student> students = service.getAllStudents();
+	        List<StudentResponseDTO> students = service.getAllStudents();
 
-	        return new ResponseEntity<List<Student>>(students, HttpStatus.OK);
+	        return new ResponseEntity<List<StudentResponseDTO>>(students, HttpStatus.OK);
 	    }
 
 	    @GetMapping("/getbyid/{id}")
-	    public ResponseEntity<Student> getStudentById(
+	    public ResponseEntity<StudentResponseDTO> getStudentById(
 	            @PathVariable Long id) {
 
-	        Student student = service.getStudentById(id);
+	        StudentResponseDTO student = service.getStudentById(id);
 
-	        return new ResponseEntity<Student>(student, HttpStatus.OK);
+	        return new ResponseEntity<StudentResponseDTO>(student, HttpStatus.OK);
 	    }
 
 	    @GetMapping("/tenant/{tenant_id}")
-	    public ResponseEntity<List<Student>> getStudentsByTenant(
+	    public ResponseEntity<List<StudentResponseDTO>> getStudentsByTenant(
 	            @PathVariable("tenant_id") Long tenant_id) {
 
-	        List<Student> students =
+	        List<StudentResponseDTO> students =
 	                service.getStudentsByTenantId(tenant_id);
 
-	        return new ResponseEntity<List<Student>>(students, HttpStatus.OK);
+	        return new ResponseEntity<List<StudentResponseDTO>>(students, HttpStatus.OK);
 	    }
 
 	    @PutMapping("/updatebyid/{id}")
 	    public ResponseEntity<String> updateStudent(
 	            @PathVariable Long id,
-	            @Valid @RequestBody Student student) {
+	            @Valid @RequestBody StudentRequestDTO student) {
 
 	        String status = service.updateStudent(id, student);
 

@@ -1,11 +1,15 @@
 package com.project.SkillHub.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.project.SkillHub.DTO.CourseRequestDTO;
+import com.project.SkillHub.DTO.CourseResponseDTO;
+import com.project.SkillHub.DTO.InstructorResponseDTO;
 import com.project.SkillHub.Exception.CourseNotFoundException;
 import com.project.SkillHub.Exception.InstructorNotFoundException;
 import com.project.SkillHub.Exception.TenantMismatchExcpetion;
@@ -24,6 +28,37 @@ public class CourseService implements IcourseService {
 	private TenantRepo tenantrepo;
 	private InstructorRepo instrepo;
     
+	//
+	private List<InstructorResponseDTO>getInstructorResponseDto(List<Instructor>instructors) {
+      List<InstructorResponseDTO>response=new ArrayList<>();
+		
+		for(Instructor instr:instructors) {
+			InstructorResponseDTO dto=new InstructorResponseDTO();
+			dto.setEmail(instr.getEmail());
+			dto.setExpertise(instr.getExpertise());
+			dto.setPhone(instr.getPhone());
+			dto.setId(instr.getId());
+			response.add(dto);
+		}
+		return response;
+	}
+	private List<CourseResponseDTO>getcourseRespnseDto(List<Course>courses){
+
+		List<CourseResponseDTO>response=new ArrayList<>();
+	  
+		for(Course cs:courses) {
+			CourseResponseDTO dto=new CourseResponseDTO();
+			dto.setActive(cs.getActive());
+			dto.setId(cs.getId());
+			dto.setName(cs.getName());
+			dto.setPrice(cs.getPrice());
+			dto.setDescription(cs.getDescription());
+			dto.setDuration(cs.getDuration());
+			dto.setInstructors(getInstructorResponseDto(cs.getInstructors()));
+			response.add(dto);
+		}
+		return response;
+	}
 	
     @Autowired
 	public CourseService(CourseRepo repo, TenantRepo tenantrepo, InstructorRepo instrepo) {
@@ -34,39 +69,59 @@ public class CourseService implements IcourseService {
 	}
 
 	@Override
-	public String CreateCourse(Long tenant_id,Course course) {
+	public String CreateCourse(Long tenant_id,CourseRequestDTO course) {
 		            
 		Optional<Tenant> optional = tenantrepo.findById(tenant_id);
-		if(optional.isPresent()) {
-			course.setTenant(optional.get());
-			 Course c=repo.save(course);
-				return "course  successfully saved with id:"+c.getId();
-
+		if(optional.isEmpty()) {
+			throw new TenantNotFoundException("Tenant with id:"+tenant_id+"Not found ");
 		}
-	throw new TenantNotFoundException("Tenant with id:"+tenant_id+"not found");
-
-        	}
-
-	@Override
-	public Course getCourseByid(Long id)  {
+		Tenant tenant=optional.get();
 		
-		   Optional<Course> optional = repo.findByIdAndActiveTrue(id);
-		   if(optional.isPresent()) {
-			   return optional.get();
-		   }
-		   throw new CourseNotFoundException(
-				    "Course with id " + id + " is not found!"
+		Course newcourse=new Course();
+		newcourse.setName(course.getName());
+		newcourse.setPrice(course.getPrice());;
+		newcourse.setDescription(course.getDescription());;
+		newcourse.setDuration(course.getDuration());
+		newcourse.setTenant(tenant);
+		
+		Course c=repo.save(newcourse);
+		return "course added successfully with id:"+c.getId();
+	}
+	@Override
+	public CourseResponseDTO getCourseByid(Long id)  {
+		
+		Optional<Course> optional = repo.findByIdAndActiveTrue(id);
+		if(optional.isEmpty()) {
+			throw new CourseNotFoundException(
+				    "Course with id:" + id + " not found"
 				);
+		}
+		Course cs=optional.get();
+		CourseResponseDTO dto=new CourseResponseDTO();
+		
+		dto.setActive(cs.getActive());
+		dto.setId(cs.getId());
+		dto.setName(cs.getName());
+		dto.setPrice(cs.getPrice());
+		dto.setDescription(cs.getDescription());
+		dto.setDuration(cs.getDuration());
+		dto.setInstructors(getInstructorResponseDto(cs.getInstructors()));
+		
+		return dto;
 	}
 
 	@Override
-	public List<Course> getAllCourse() {
-		return repo.findByActiveTrue();
+	public List<CourseResponseDTO> getAllCourse() {
+		List<Course>courses=repo.findByActiveTrue();
+		
+		List<CourseResponseDTO>response=getcourseRespnseDto(courses);
+		
+		return response;
 		
 	}
 
 	@Override
-	public String updateCourseid(Long id, Course course) {
+	public String updateCourseid(Long id, CourseRequestDTO course) {
 		
 	     Optional<Course> optional = repo.findByIdAndActiveTrue(id);
 	     if(optional.isPresent()) {
@@ -81,7 +136,7 @@ public class CourseService implements IcourseService {
 	    	 return "course with given id updated successfully";
 	     }
 	     throw new CourseNotFoundException(
-	    		    "Course with id " + id + " is not found!"
+	    		    "Course with id " + id + "  not found!"
 	    		);
 	}
 
@@ -100,10 +155,12 @@ public class CourseService implements IcourseService {
 	}
 
 	@Override
-	public List<Course> fetchByTenet_id(Long Tenetid) {
+	public List<CourseResponseDTO> fetchByTenet_id(Long tenetId) {
+		List<Course>courses=repo.findByTenant_IdAndActiveTrue(tenetId);
+
+		List<CourseResponseDTO>response=getcourseRespnseDto(courses);
 		
-		return repo.findByTenant_IdAndActiveTrue(Tenetid);
-		
+		return response;
 	}
 
 	@Override
@@ -144,14 +201,18 @@ public class CourseService implements IcourseService {
 	}
 
 	@Override
-	public List<Course> fetchbyisntructorid(Long instructorId) {
+	public List<CourseResponseDTO> fetchbyisntructorid(Long instructorId) {
 		
 		Optional<Instructor> optional = instrepo.findById(instructorId);
 		if(optional.isEmpty()) {
 			throw new InstructorNotFoundException("insturcotor with id:"+instructorId+"not found");
 		}
-		List<Course>instructors=repo.findByInstructors_id(instructorId);
-		return instructors;
+		List<Course>courses=repo.findByInstructors_id(instructorId);
+
+		List<CourseResponseDTO>response=getcourseRespnseDto(courses);
+		
+		return response;
+		
 		
 	}
 

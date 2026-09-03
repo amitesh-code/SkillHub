@@ -2,18 +2,20 @@ package com.project.SkillHub.Service;
 
 import java.util.List;
 
+import com.project.SkillHub.DTO.InstructorRequestDTO;
+import com.project.SkillHub.DTO.InstructorResponseDTO;
 import com.project.SkillHub.Model.Instructor;
 
 public interface IinstructorService {
-	 String createInstructor(Long tenantId, Instructor instructor);
+	 String createInstructor(Long tenantId, InstructorRequestDTO instructor);
 
-	    Instructor getInstructorById(Long id);
+	    InstructorResponseDTO getInstructorById(Long id);
 
-	    List<Instructor> getAllInstructors();
+	    List<InstructorResponseDTO> getAllInstructors();
 
-	    List<Instructor> getInstructorsByTenantId(Long tenantId);
+	    List<InstructorResponseDTO> getInstructorsByTenantId(Long tenantId);
 
-	    String updateInstructor(Long id, Instructor instructor);
+	    String updateInstructor(Long id, InstructorRequestDTO instructor);
 
 	    String deleteInstructorById(Long id);
 	    

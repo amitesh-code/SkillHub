@@ -1,12 +1,14 @@
 package com.project.SkillHub.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-
+import com.project.SkillHub.DTO.StudentRequestDTO;
+import com.project.SkillHub.DTO.StudentResponseDTO;
 import com.project.SkillHub.Exception.StudentNotFoundException;
 import com.project.SkillHub.Exception.TenantNotFoundException;
 
@@ -25,12 +27,17 @@ public class StudentService implements IstudentService {
 	private TenantRepo tenantrepo;
 	
 	@Override
-	public String createStudent(Long tenant_id, Student student) {
+	public String createStudent(Long tenant_id, StudentRequestDTO student) {
 		Optional<Tenant> optional = tenantrepo.findById(tenant_id);
 		if(optional.isPresent()) {
-			student.setTenant(optional.get());
-			 Student c=repo.save(student);
-				return "student  successfully saved with id:"+c.getId();
+			
+			Student newstudent=new Student();
+			newstudent.setName(student.getName());
+			newstudent.setEmail(student.getEmail());
+			newstudent.setPhone(student.getPhone());
+			newstudent.setTenant(optional.get());
+			Student s=repo.save(newstudent);
+				return "student  successfully saved with id:"+s.getId();
 
 		}
 	throw new TenantNotFoundException("Tenant with id:"+tenant_id+"not found");
@@ -39,36 +46,65 @@ public class StudentService implements IstudentService {
 	
 
 	@Override
-	public Student getStudentById(Long id) {
+	public StudentResponseDTO getStudentById(Long id) {
 		 Optional<Student> optional = repo.findById(id);
-		  return optional.orElseThrow(()-> new StudentNotFoundException("Student with id:"+id+"not found"));
-	}
-
-	@Override
-	public List<Student> getAllStudents() {
-	  return 	repo.findAll();
-	}
-
-	@Override
-	public List<Student> getStudentsByTenantId(Long tenantId) {
-		return repo.findByTenant_Id(tenantId);
-		
-			
-	}
-
-	@Override
-	public String updateStudent(Long id, Student student) {
-		Optional<Student> optional = repo.findById(id);
-		 if(optional.isPresent()) {
-			 Student ten=optional.get();
-			 ten.setId(id);
-			 ten.setName(student.getName());
-			 ten.setEmail(student.getEmail());
-			 ten.setPhone(student.getPhone());
-			 repo.save(ten);
-			 return "student with given id updated Successfully!";
+		 if(optional.isEmpty()) {
+			 throw new StudentNotFoundException("student with id:"+id+"Not found exception");
 		 }
-		throw new StudentNotFoundException("Student with id:"+id+"not found");
+		 Student current=optional.get();
+		 StudentResponseDTO str=new StudentResponseDTO();
+		 str.setId(current.getId());
+		 str.setName(current.getName());
+		 str.setEmail(current.getEmail());
+		 str.setPhone(current.getPhone());
+		 return str;
+		 
+	}
+
+	@Override
+	public List<StudentResponseDTO> getAllStudents() {
+		
+		List<Student>student=repo.findAll();
+		List<StudentResponseDTO>response=new ArrayList<>();
+		for(Student st:student) {
+			StudentResponseDTO sdto=new StudentResponseDTO();
+			sdto.setId(st.getId());
+			sdto.setName(st.getName());
+			sdto.setEmail(st.getEmail());
+			sdto.setPhone(st.getPhone());
+			response.add(sdto);
+		}
+	  return 	response;
+	}
+
+	@Override
+	public List<StudentResponseDTO> getStudentsByTenantId(Long tenantId) {
+		List<Student>student=repo.findByTenant_Id(tenantId);
+		List<StudentResponseDTO>response=new ArrayList<>();
+		for(Student st:student) {
+			StudentResponseDTO sdto=new StudentResponseDTO();
+			sdto.setId(st.getId());
+			sdto.setName(st.getName());
+			sdto.setEmail(st.getEmail());
+			sdto.setPhone(st.getPhone());
+			response.add(sdto);
+		}
+		return response;
+	}
+
+	@Override
+	public String updateStudent(Long id, StudentRequestDTO student) {
+		Optional<Student> optional = repo.findById(id);
+		if(optional.isEmpty()) {
+			throw new StudentNotFoundException("Student with id:" +id +"Not found.");
+		}
+		Student current=optional.get();
+		current.setName(student.getName());
+		current.setPhone(student.getPhone());
+		current.setEmail(student.getEmail());
+		repo.save(current);
+		
+		return "Student with given id,updated successfully";
 	}
 
 	@Override

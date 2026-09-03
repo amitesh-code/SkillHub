@@ -12,6 +12,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.project.SkillHub.DTO.CourseRequestDTO;
+import com.project.SkillHub.DTO.CourseResponseDTO;
 import com.project.SkillHub.Model.Course;
 import com.project.SkillHub.Service.IcourseService;
 
@@ -32,7 +34,7 @@ public class Courscontroller {
 	}
 	
 	@PostMapping("/add/{tenant_id}")
-	public ResponseEntity<String>addCourse(@Valid @RequestBody Course course,@PathVariable("tenant_id")Long tenant_id){
+	public ResponseEntity<String>addCourse(@Valid @RequestBody CourseRequestDTO course,@PathVariable("tenant_id")Long tenant_id){
 		
 		String status=service.CreateCourse(tenant_id,course);
 		return new ResponseEntity<String>(status,HttpStatus.CREATED);
@@ -40,19 +42,19 @@ public class Courscontroller {
 	
 	@GetMapping("/getall")
 	public ResponseEntity<List>getAllcourses(){
-		List<Course>ls=service.getAllCourse();
+		List<CourseResponseDTO>ls=service.getAllCourse();
 		return new ResponseEntity<List>(ls,HttpStatus.OK);
 	}
 	@GetMapping("/getbyid/{id}")
-	public ResponseEntity<Course>getcoursebyid(@PathVariable Long id){
+	public ResponseEntity<CourseResponseDTO>getcoursebyid(@PathVariable Long id){
 		
-		Course course=service.getCourseByid(id);
-		return new ResponseEntity<Course>(course,HttpStatus.OK);
+		CourseResponseDTO course=service.getCourseByid(id);
+		return new ResponseEntity<CourseResponseDTO>(course,HttpStatus.OK);
 		
 	}
 	
 	@PutMapping("/updatebyid/{id}")
-	public ResponseEntity<String>updatebyid(@PathVariable Long id,@Valid @RequestBody Course course){
+	public ResponseEntity<String>updatebyid(@PathVariable Long id,@Valid @RequestBody CourseRequestDTO course){
 		
 		String status=service.updateCourseid(id, course);
 		return new ResponseEntity<String>(status,HttpStatus.OK);
@@ -68,7 +70,7 @@ public ResponseEntity<String>deletebyid(@PathVariable Long id){
 	@GetMapping("/tenant/{tenant_id}")
 	public ResponseEntity<List>getallcourses(@PathVariable Long tenant_id){
 		
-		List<Course>ls=service.fetchByTenet_id(tenant_id);
+		List<CourseResponseDTO>ls=service.fetchByTenet_id(tenant_id);
 		
 		return new ResponseEntity<List>(ls,HttpStatus.OK);
 	}
@@ -84,7 +86,7 @@ public ResponseEntity<String>deletebyid(@PathVariable Long id){
 	@GetMapping("/courses/{instructorId}")
 	public ResponseEntity<List>getcoursesbasedoninstructorsid(@PathVariable("instructorId")Long instructorId){
 		
-		List<Course>courses=service.fetchbyisntructorid(instructorId);
+		List<CourseResponseDTO>courses=service.fetchbyisntructorid(instructorId);
 		return new ResponseEntity<List>(courses,HttpStatus.OK);
 	}
 }

@@ -15,9 +15,17 @@ public class Enrollment {
 
     private String enrollmentDate;
 
-    private String status;
+    private EnrollmentStatus status;
     
-    @ManyToOne
+    public void setStatus(EnrollmentStatus status) {
+		this.status = status;
+	}
+    public EnrollmentStatus getStatus() {
+        return status;
+    }
+
+
+	@ManyToOne
     @JoinColumn(name="student_id")
     private Student student;
     
@@ -59,20 +67,10 @@ public class Enrollment {
 		this.enrollmentDate = enrollmentDate;
 	}
 
-	public String getStatus() {
-		return status;
-	}
+	
+	
 
-	public void setStatus(String status) {
-		this.status = status;
-	}
-
-	public Enrollment(Long id, String enrollmentDate, String status) {
-		super();
-		this.id = id;
-		this.enrollmentDate = enrollmentDate;
-		this.status = status;
-	}
+	
 
 	public Enrollment() {
 		super();

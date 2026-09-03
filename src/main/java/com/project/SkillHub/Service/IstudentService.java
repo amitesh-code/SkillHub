@@ -2,19 +2,21 @@ package com.project.SkillHub.Service;
 
 import java.util.List;
 
+import com.project.SkillHub.DTO.StudentRequestDTO;
+import com.project.SkillHub.DTO.StudentResponseDTO;
 import com.project.SkillHub.Model.Course;
 import com.project.SkillHub.Model.Student;
 
 public interface IstudentService {
-	String createStudent(Long tenantId, Student student);
+	String createStudent(Long tenantId, StudentRequestDTO student);
 
-    Student getStudentById(Long id);
+    StudentResponseDTO getStudentById(Long id);
 
-    List<Student> getAllStudents();
+    List<StudentResponseDTO> getAllStudents();
 
-    List<Student> getStudentsByTenantId(Long tenantId);
+    List<StudentResponseDTO> getStudentsByTenantId(Long tenantId);
 
-    String updateStudent(Long id, Student student);
+    String updateStudent(Long id, StudentRequestDTO student);
 
     String deleteStudentById(Long id);
     

@@ -14,6 +14,10 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.project.SkillHub.DTO.CourseResponseDTO;
+import com.project.SkillHub.DTO.EnrollmentRequestDTO;
+import com.project.SkillHub.DTO.EnrollmentResponseDTO;
+import com.project.SkillHub.DTO.StudentResponseDTO;
 import com.project.SkillHub.Model.Course;
 import com.project.SkillHub.Model.Enrollment;
 import com.project.SkillHub.Model.Student;
@@ -25,32 +29,32 @@ public class Enrollmentcontroller {
     @Autowired
 	IenrollmentService service;
     
-    @PostMapping("/add/{studentId}/{courseId}")
+    @PostMapping("/add")
     public ResponseEntity<String> addEnrollment(
-            @RequestBody Enrollment enrollment,@PathVariable("studentId")Long studentId,@PathVariable("courseId")Long courseId) {
+            @RequestBody EnrollmentRequestDTO enrollment) {
 
-        String status = service.createEnrollment(studentId,courseId,enrollment);
+        String status = service.createEnrollment(enrollment);
 
         return new ResponseEntity<String>(
                 status, HttpStatus.CREATED);
     }
 
     @GetMapping("/getall")
-    public ResponseEntity<List<Enrollment>> getAllEnrollments() {
+    public ResponseEntity<List<EnrollmentResponseDTO>> getAllEnrollments() {
 
-        List<Enrollment> enrollments = service.getAllEnrollments();
+        List<EnrollmentResponseDTO> enrollments = service.getAllEnrollments();
 
-        return new ResponseEntity<List<Enrollment>>(
+        return new ResponseEntity<List<EnrollmentResponseDTO>>(
                 enrollments, HttpStatus.OK);
     }
 
     @GetMapping("/getbyid/{id}")
-    public ResponseEntity<Enrollment> getEnrollmentById(
+    public ResponseEntity<EnrollmentResponseDTO> getEnrollmentById(
             @PathVariable Long id) {
 
-        Enrollment enrollment = service.getEnrollmentById(id);
+        EnrollmentResponseDTO enrollment = service.getEnrollmentById(id);
 
-        return new ResponseEntity<Enrollment>(
+        return new ResponseEntity<EnrollmentResponseDTO>(
                 enrollment, HttpStatus.OK);
     }
 
@@ -77,15 +81,28 @@ public class Enrollmentcontroller {
     @GetMapping("/enrolledstudent/{courseId}")
     public ResponseEntity<List>getstudentenrolledinCourse(@PathVariable Long courseId){
     	
-    	List<Student>ls=service.enrolledinCourse(courseId);
+    	List<StudentResponseDTO>ls=service.enrolledinCourse(courseId);
     	
     	return new ResponseEntity<List>(ls,HttpStatus.OK);
     	
     }
     @GetMapping("/coursesofstudent/{studentId}")
     public ResponseEntity<List>getcoursesbasedonstudentId(@PathVariable("studentId")Long studentId){
-    	List<Course>ls=service.fetchcoursesbystudent_id(studentId);
+    	List<CourseResponseDTO>ls=service.fetchcoursesbystudent_id(studentId);
     	return new ResponseEntity<List>(ls,HttpStatus.OK);
     }
+    @PutMapping("/completed/{id}")
+    public ResponseEntity<String>compltecourse(@PathVariable("id")Long id){
+    	String status=service.completeEnrollment(id);
+    	return new ResponseEntity<String>(status,HttpStatus.OK);
+    }
+    
+    @PutMapping("/cancel/{id}")
+    public ResponseEntity<String>canceledcourse(@PathVariable ("id")Long id){
+    	String status=service.cancelEnrollment(id);
+    	return new ResponseEntity<String>(status,HttpStatus.OK);
+    }
+    
+    
 }
 
