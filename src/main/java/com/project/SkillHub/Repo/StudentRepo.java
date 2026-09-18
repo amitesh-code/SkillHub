@@ -9,4 +9,5 @@ import com.project.SkillHub.Model.Student;
 
 public interface StudentRepo extends JpaRepository<Student,Long> {
 	List<Student>findByTenant_Id(Long Tenetid);
+	boolean existsByTenant_Id(Long tenantId);
 }

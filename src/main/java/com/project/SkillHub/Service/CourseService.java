@@ -34,10 +34,11 @@ public class CourseService implements IcourseService {
 		
 		for(Instructor instr:instructors) {
 			InstructorResponseDTO dto=new InstructorResponseDTO();
-			dto.setEmail(instr.getEmail());
-			dto.setExpertise(instr.getExpertise());
-			dto.setPhone(instr.getPhone());
 			dto.setId(instr.getId());
+			dto.setName(instr.getName());
+			dto.setEmail(instr.getEmail());
+			dto.setPhone(instr.getPhone());
+			dto.setExpertise(instr.getExpertise());		
 			response.add(dto);
 		}
 		return response;
@@ -215,7 +216,46 @@ public class CourseService implements IcourseService {
 		
 		
 	}
+	@Override
+	public String removeInstructor(Long courseId, Long instructorId) {
 
+	    Optional<Course> courseOptional = repo.findByIdAndActiveTrue(courseId);
+
+	    if (courseOptional.isEmpty()) {
+	        throw new CourseNotFoundException(
+	            "Course with id: " + courseId + " not found"
+	        );
+	    }
+
+	    Optional<Instructor> instructorOptional = instrepo.findById(instructorId);
+
+	    if (instructorOptional.isEmpty()) {
+	        throw new InstructorNotFoundException(
+	            "Instructor with id: " + instructorId + " not found"
+	        );
+	    }
+
+	    Course course = courseOptional.get();
+	    Instructor instructor = instructorOptional.get();
+
+	    if (!course.getTenant().getId().equals(instructor.getTenant().getId())) {
+	        throw new TenantMismatchExcpetion(
+	            "Course and Instructor belong to different tenants"
+	        );
+	    }
+
+	    if (!course.getInstructors().contains(instructor)) {
+	        throw new InstructorNotFoundException(
+	            "Instructor is not assigned to this course"
+	        );
+	    }
+
+	    course.getInstructors().remove(instructor);
+
+	    repo.save(course);
+
+	    return "Instructor removed from course successfully";
+	}
 	
 
 	

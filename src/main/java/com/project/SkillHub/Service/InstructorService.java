@@ -10,11 +10,13 @@ import org.springframework.stereotype.Service;
 import com.project.SkillHub.DTO.InstructorRequestDTO;
 import com.project.SkillHub.DTO.InstructorResponseDTO;
 import com.project.SkillHub.DTO.StudentResponseDTO;
+import com.project.SkillHub.Exception.InstructorAssignedToCourseException;
 import com.project.SkillHub.Exception.InstructorNotFoundException;
 import com.project.SkillHub.Exception.TenantNotFoundException;
 import com.project.SkillHub.Model.Instructor;
 import com.project.SkillHub.Model.Student;
 import com.project.SkillHub.Model.Tenant;
+import com.project.SkillHub.Repo.CourseRepo;
 import com.project.SkillHub.Repo.InstructorRepo;
 import com.project.SkillHub.Repo.TenantRepo;
 
@@ -24,11 +26,13 @@ public class InstructorService implements IinstructorService {
 	
 	private InstructorRepo repo;
 	private TenantRepo trepo;
+	private CourseRepo courseRepo;
 	@Autowired
-	public InstructorService(InstructorRepo repo, TenantRepo trepo) {
-		super();
-		this.repo = repo;
-		this.trepo = trepo;
+	public InstructorService(InstructorRepo repo, TenantRepo trepo, CourseRepo courseRepo) {
+	    super();
+	    this.repo = repo;
+	    this.trepo = trepo;
+	    this.courseRepo = courseRepo;
 	}
 
 
@@ -128,14 +132,26 @@ public class InstructorService implements IinstructorService {
 
 	@Override
 	public String deleteInstructorById(Long id) {
-		 Optional<Instructor> optional = repo.findById(id);
 
-		    if (optional.isPresent()) {
-		        repo.deleteById(id);
+	    Optional<Instructor> optional = repo.findById(id);
 
-		        return "Instructor with id: " + id + " deleted successfully";
-		    }
-       throw new InstructorNotFoundException("Instructor with id: "+id+"not found");
+	    if (optional.isEmpty()) {
+	        throw new InstructorNotFoundException(
+	            "Instructor with id: " + id + " not found"
+	        );
+	    }
+
+	    boolean assignedToCourse = courseRepo.existsByInstructors_Id(id);
+
+	    if (assignedToCourse) {
+	        throw new InstructorAssignedToCourseException(
+	            "Instructor cannot be deleted because they are assigned to a course"
+	        );
+	    }
+
+	    repo.deleteById(id);
+
+	    return "Instructor with id: " + id + " deleted successfully";
 	}
 
 }

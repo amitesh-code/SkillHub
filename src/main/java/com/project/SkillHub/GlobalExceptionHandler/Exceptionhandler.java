@@ -13,8 +13,11 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import com.project.SkillHub.Exception.CourseNotFoundException;
 import com.project.SkillHub.Exception.EnrollmentNotFoundException;
+import com.project.SkillHub.Exception.InstructorAssignedToCourseException;
 import com.project.SkillHub.Exception.InstructorNotFoundException;
+import com.project.SkillHub.Exception.StudentActiveEnrollmentException;
 import com.project.SkillHub.Exception.StudentNotFoundException;
+import com.project.SkillHub.Exception.TenantHasRecordsException;
 import com.project.SkillHub.Exception.TenantMismatchExcpetion;
 import com.project.SkillHub.Exception.TenantNotFoundException;
 
@@ -84,5 +87,50 @@ public class Exceptionhandler {
 		ErrorDetails erd=new ErrorDetails(" 500 Internal server error",ex.getMessage(),LocalDateTime.now());
 		
 		return new ResponseEntity<ErrorDetails>(erd,HttpStatus.INTERNAL_SERVER_ERROR);
+	}
+	@ExceptionHandler(StudentActiveEnrollmentException.class)
+	public ResponseEntity<ErrorDetails> handleStudentActiveEnrollmentException(
+	        StudentActiveEnrollmentException ex) {
+
+	    ErrorDetails erd = new ErrorDetails(
+	            "409 Conflict",
+	            ex.getMessage(),
+	            LocalDateTime.now()
+	    );
+
+	    return new ResponseEntity<ErrorDetails>(
+	            erd,
+	            HttpStatus.CONFLICT
+	    );
+	}
+	@ExceptionHandler(InstructorAssignedToCourseException.class)
+	public ResponseEntity<ErrorDetails> handleInstructorAssignedToCourseException(
+	        InstructorAssignedToCourseException ex) {
+
+	    ErrorDetails erd = new ErrorDetails(
+	        "409 Conflict",
+	        ex.getMessage(),
+	        LocalDateTime.now()
+	    );
+
+	    return new ResponseEntity<ErrorDetails>(
+	        erd,
+	        HttpStatus.CONFLICT
+	    );
+	}
+	@ExceptionHandler(TenantHasRecordsException.class)
+	public ResponseEntity<ErrorDetails> handleTenantHasRecordsException(
+	        TenantHasRecordsException ex) {
+
+	    ErrorDetails erd = new ErrorDetails(
+	        "409 Conflict",
+	        ex.getMessage(),
+	        LocalDateTime.now()
+	    );
+
+	    return new ResponseEntity<ErrorDetails>(
+	        erd,
+	        HttpStatus.CONFLICT
+	    );
 	}
 }

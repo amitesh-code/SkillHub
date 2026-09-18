@@ -38,7 +38,7 @@ public class Student {
 		return id;
 	}
 	public void setId(Long id) {
-		id = id;
+		this.id = id;
 	}
 	public String getName() {
 		return name;
@@ -60,7 +60,7 @@ public class Student {
 	}
 	public Student(Long id, String name, String email, String phone) {
 		super();
-		id = id;
+		this.id = id;
 		this.name = name;
 		this.email = email;
 		this.phone = phone;

@@ -9,11 +9,13 @@ import org.springframework.stereotype.Service;
 
 import com.project.SkillHub.DTO.StudentRequestDTO;
 import com.project.SkillHub.DTO.StudentResponseDTO;
+import com.project.SkillHub.Exception.StudentActiveEnrollmentException;
 import com.project.SkillHub.Exception.StudentNotFoundException;
 import com.project.SkillHub.Exception.TenantNotFoundException;
-
+import com.project.SkillHub.Model.EnrollmentStatus;
 import com.project.SkillHub.Model.Student;
 import com.project.SkillHub.Model.Tenant;
+import com.project.SkillHub.Repo.EnrollmentRepo;
 import com.project.SkillHub.Repo.StudentRepo;
 import com.project.SkillHub.Repo.TenantRepo;
 
@@ -25,6 +27,9 @@ public class StudentService implements IstudentService {
 	
 	@Autowired
 	private TenantRepo tenantrepo;
+	
+	@Autowired
+	private EnrollmentRepo enrollmentRepo;
 	
 	@Override
 	public String createStudent(Long tenant_id, StudentRequestDTO student) {
@@ -109,16 +114,30 @@ public class StudentService implements IstudentService {
 
 	@Override
 	public String deleteStudentById(Long id) {
-		Optional<Student> optional = repo.findById(id);
-		if(optional.isPresent()) {
-			repo.deleteById(id);
-			
-			return "Student with given id,deleted sucessfully!";
-		}
-		throw new StudentNotFoundException(
-			    "Student with id " + id + " is not found!"
-			);
 
+	    Optional<Student> optional = repo.findById(id);
+
+	    if (optional.isEmpty()) {
+	        throw new StudentNotFoundException(
+	                "Student with id " + id + " is not found!"
+	        );
+	    }
+
+	    boolean activeEnrollmentExists =
+	            enrollmentRepo.existsByStudent_IdAndStatus(
+	                    id,
+	                    EnrollmentStatus.ACTIVE
+	            );
+
+	    if (activeEnrollmentExists) {
+	        throw new StudentActiveEnrollmentException(
+	                "Student cannot be deleted because they have an active enrollment"
+	        );
+	    }
+
+	    repo.deleteById(id);
+
+	    return "Student with given id, deleted successfully!";
 	}
 	
 	

@@ -21,4 +21,6 @@ public interface IcourseService {
 	
 	List<CourseResponseDTO>fetchbyisntructorid(Long instructorId);
 	
+	String removeInstructor(Long courseId, Long instructorId);
+	
 }

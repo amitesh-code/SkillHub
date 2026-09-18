@@ -23,6 +23,8 @@ import com.project.SkillHub.Model.Enrollment;
 import com.project.SkillHub.Model.Student;
 import com.project.SkillHub.Service.IenrollmentService;
 
+import jakarta.validation.Valid;
+
 @RestController
 @RequestMapping("/EnrollmentController")
 public class Enrollmentcontroller {
@@ -31,7 +33,7 @@ public class Enrollmentcontroller {
     
     @PostMapping("/add")
     public ResponseEntity<String> addEnrollment(
-            @RequestBody EnrollmentRequestDTO enrollment) {
+            @Valid @RequestBody EnrollmentRequestDTO enrollment) {
 
         String status = service.createEnrollment(enrollment);
 

@@ -89,4 +89,13 @@ public ResponseEntity<String>deletebyid(@PathVariable Long id){
 		List<CourseResponseDTO>courses=service.fetchbyisntructorid(instructorId);
 		return new ResponseEntity<List>(courses,HttpStatus.OK);
 	}
+	@DeleteMapping("/{courseId}/instructor/{instructorId}")
+	public ResponseEntity<String> removeInstructor(
+	        @PathVariable Long courseId,
+	        @PathVariable Long instructorId) {
+
+	    String status = service.removeInstructor(courseId, instructorId);
+
+	    return new ResponseEntity<String>(status, HttpStatus.OK);
+	}
 }

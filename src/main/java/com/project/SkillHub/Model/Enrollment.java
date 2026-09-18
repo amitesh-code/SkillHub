@@ -1,6 +1,8 @@
 package com.project.SkillHub.Model;
 
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -14,7 +16,7 @@ public class Enrollment {
     private Long id;
 
     private String enrollmentDate;
-
+    @Enumerated(EnumType.STRING)
     private EnrollmentStatus status;
     
     public void setStatus(EnrollmentStatus status) {

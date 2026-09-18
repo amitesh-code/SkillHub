@@ -5,13 +5,22 @@ import java.util.List;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import com.project.SkillHub.Model.Enrollment;
+import com.project.SkillHub.Model.EnrollmentStatus;
 
 public interface EnrollmentRepo extends JpaRepository<Enrollment, Long> {
 
-	//to prevent duplicate insertion,we check both the ids by this method.
-	boolean existsByStudent_IdAndCourse_Id(Long studentId, Long courseId);
-	List<Enrollment>findByCourse_Id(Long CourseId);
-	
-	List<Enrollment>findByStudent_Id(Long studentId);
-	
+    boolean existsByStudent_IdAndCourse_IdAndStatus(
+            Long studentId,
+            Long courseId,
+            EnrollmentStatus status
+    );
+
+    boolean existsByStudent_IdAndStatus(
+            Long studentId,
+            EnrollmentStatus status
+    );
+
+    List<Enrollment> findByCourse_Id(Long courseId);
+
+    List<Enrollment> findByStudent_Id(Long studentId);
 }

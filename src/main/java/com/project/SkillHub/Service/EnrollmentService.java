@@ -1,5 +1,6 @@
 package com.project.SkillHub.Service;
 
+import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -47,10 +48,11 @@ public class EnrollmentService implements IenrollmentService {
 			
 			for(Instructor instr:instructors) {
 				InstructorResponseDTO dto=new InstructorResponseDTO();
-				dto.setEmail(instr.getEmail());
-				dto.setExpertise(instr.getExpertise());
-				dto.setPhone(instr.getPhone());
 				dto.setId(instr.getId());
+				dto.setName(instr.getName());
+				dto.setEmail(instr.getEmail());
+				dto.setPhone(instr.getPhone());
+				dto.setExpertise(instr.getExpertise());
 				response.add(dto);
 			}
 			return response;
@@ -97,15 +99,33 @@ public class EnrollmentService implements IenrollmentService {
 		if(!studentTenantId.equals(courseTenantId)) {
 			throw new TenantMismatchExcpetion("student and course belong to different tenants");
 		}
-		if(repo.existsByStudent_IdAndCourse_Id(enrollment.getStudentId(), enrollment.getCourseId())) {
-			return "Student is already enrolled in this courses";
+		boolean activeEnrollmentExists =
+		        repo.existsByStudent_IdAndCourse_IdAndStatus(
+		                enrollment.getStudentId(),
+		                enrollment.getCourseId(),
+		                EnrollmentStatus.ACTIVE
+		        );
+
+		if (activeEnrollmentExists) {
+		    return "Student is already actively enrolled in this course";
+		}
+
+		boolean completedEnrollmentExists =
+		        repo.existsByStudent_IdAndCourse_IdAndStatus(
+		                enrollment.getStudentId(),
+		                enrollment.getCourseId(),
+		                EnrollmentStatus.COMPLETED
+		        );
+
+		if (completedEnrollmentExists) {
+		    return "Student has already completed this course and cannot enroll again";
 		}
 		
 		Enrollment enr=new Enrollment();
 		enr.setCourse(course);
 		enr.setStudent(student);
 		enr.setStatus(EnrollmentStatus.ACTIVE);
-		enr.setEnrollmentDate(LocalTime.now().toString());
+		enr.setEnrollmentDate(LocalDate.now().toString());
 		
 		
 		Enrollment saved = repo.save(enr);
@@ -262,7 +282,7 @@ public class EnrollmentService implements IenrollmentService {
 		 }
 		 Enrollment enrollment=optional.get();
 		 if (enrollment.getStatus() != EnrollmentStatus.ACTIVE) {
-		        return "Only active enrollment can be completed";
+		        return "Only active enrollment can be canceled";
 		    }
 
 		    enrollment.setStatus(EnrollmentStatus.CANCELLED);
