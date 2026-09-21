@@ -1,4 +1,4 @@
-package com.project.SkillHub.Security;
+package com.project.SkillHub.Service;
 
 import java.util.Optional;
 
@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 
 import com.project.SkillHub.Enum.Roles;
 import com.project.SkillHub.Exception.TenantNotFoundException;
+import com.project.SkillHub.Exception.UserAlreadyExiest;
 import com.project.SkillHub.Exception.UsersNotFoundException;
 import com.project.SkillHub.Model.Tenant;
 import com.project.SkillHub.Model.Users;
@@ -25,27 +26,50 @@ public class UserService implements IuserService {
 	
 	@Autowired
 	private PasswordEncoder passwordencoder;
-
 	@Override
-	public String Createuser(String email, String password, Roles role, Long tenant_id) {
-		
+    public String createSuperAdmin(String email,String password) {
+    	
+    	if(repo.existsByEmail(email)) {
+    		throw new UserAlreadyExiest("user with this email already exiest");
+    	}
+    	
+    	Users user=new Users();
+    	user.setEmail(email);
+    	user.setPassword(passwordencoder.encode(password));
+    	user.setEnabled(true);
+    	user.setRole(Roles.SUPER_ADMIN);
+    	user.setTenant(null);
+    	
+    	Users savedUser=repo.save(user);
+    	return "Super_Admin created successfully with id:"+savedUser.getId();
+    	
+    }
+	@Override
+	public String createTenantUser(String email, String password, Roles role, Long tenantId) {
 		if(repo.existsByEmail(email)) {
-			throw new RuntimeException("Email already Exiest");
+    		throw new UserAlreadyExiest("user with this email already exiest");
+    	}
+		if(role==Roles.SUPER_ADMIN) {
+			throw new  RuntimeException("SUPER_ADMIN cannot be a tenant user");
 		}
-		Optional<Tenant>opt=tenantRepo.findById(tenant_id);
-		if(opt.isEmpty()) {
-			throw new TenantNotFoundException("Tenant with id:"+tenant_id+"Not found");
-		}
-		Tenant tenant=opt.get();
-		Users newUser=new Users();
-		newUser.setEmail(email);
-		newUser.setRole(role);
-		newUser.setTenant(tenant);
-		newUser.setEnabled(true);
-		newUser.setPassword(passwordencoder.encode(password));
-		repo.save(newUser);
-		return "User created successfully with id: " + newUser.getId();
+		
+		Tenant tenant=tenantRepo.findById(tenantId).orElseThrow(()
+				->new TenantNotFoundException("Tenant with id:"+tenantId+"Not found"));
+		
+		Users user=new Users();
+		user.setEmail(email);
+		user.setPassword(passwordencoder.encode(password));
+		user.setEnabled(true);
+		user.setRole(role);
+		user.setTenant(tenant);
+		
+		Users savedUser=repo.save(user);
+		return "user create Successfully with id:"+savedUser.getId();
+		
+	
 	}
+	
+	
 
 	@Override
 	public Users getuserbyId(Long id) {
@@ -90,4 +114,6 @@ return repo.findByEmail(email).orElseThrow(()->new UsersNotFoundException("User 
 		repo.save(user);
 		return "user enabled successfully";
 	}
+
+	
 }

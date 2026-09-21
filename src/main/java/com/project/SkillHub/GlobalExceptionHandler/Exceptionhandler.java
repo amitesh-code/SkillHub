@@ -20,6 +20,7 @@ import com.project.SkillHub.Exception.StudentNotFoundException;
 import com.project.SkillHub.Exception.TenantHasRecordsException;
 import com.project.SkillHub.Exception.TenantMismatchExcpetion;
 import com.project.SkillHub.Exception.TenantNotFoundException;
+import com.project.SkillHub.Exception.UserAlreadyExiest;
 
 @RestControllerAdvice
 public class Exceptionhandler {
@@ -121,6 +122,21 @@ public class Exceptionhandler {
 	@ExceptionHandler(TenantHasRecordsException.class)
 	public ResponseEntity<ErrorDetails> handleTenantHasRecordsException(
 	        TenantHasRecordsException ex) {
+
+	    ErrorDetails erd = new ErrorDetails(
+	        "409 Conflict",
+	        ex.getMessage(),
+	        LocalDateTime.now()
+	    );
+
+	    return new ResponseEntity<ErrorDetails>(
+	        erd,
+	        HttpStatus.CONFLICT
+	    );
+	}
+	@ExceptionHandler(UserAlreadyExiest.class)
+	public ResponseEntity<ErrorDetails> handleUsersAlreadyExiestException(
+	       UserAlreadyExiest ex) {
 
 	    ErrorDetails erd = new ErrorDetails(
 	        "409 Conflict",

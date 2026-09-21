@@ -8,11 +8,13 @@ import org.springframework.security.config.annotation.authentication.configurati
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.stereotype.Service;
 
 import com.project.SkillHub.Exception.UsersNotFoundException;
 import com.project.SkillHub.Model.Users;
 import com.project.SkillHub.Repo.UsersRepo;
 
+@Service
 public class UserdetailService implements UserDetailsService {
 	
 	@Autowired
