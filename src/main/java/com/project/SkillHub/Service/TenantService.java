@@ -14,6 +14,7 @@ import com.project.SkillHub.Repo.CourseRepo;
 import com.project.SkillHub.Repo.InstructorRepo;
 import com.project.SkillHub.Repo.StudentRepo;
 import com.project.SkillHub.Repo.TenantRepo;
+import com.project.SkillHub.Security.CurrentUserService;
 @Service
 public class TenantService implements ItenantService {
     
@@ -21,18 +22,21 @@ public class TenantService implements ItenantService {
 	private CourseRepo courseRepo;
 	private InstructorRepo instructorRepo;
 	private StudentRepo studentRepo;
-    
+    private CurrentUserService currentuserService;
 	@Autowired
 	public TenantService(
 	        TenantRepo repo,
 	        CourseRepo courseRepo,
 	        InstructorRepo instructorRepo,
-	        StudentRepo studentRepo) {
+	        StudentRepo studentRepo,
+	        CurrentUserService currentuserService
+			) {
 
 	    this.repo = repo;
 	    this.courseRepo = courseRepo;
 	    this.instructorRepo = instructorRepo;
 	    this.studentRepo = studentRepo;
+	    this.currentuserService=currentuserService;
 	}
 
 	@Override
@@ -46,7 +50,17 @@ public class TenantService implements ItenantService {
 	@Override
 	public Tenant getTenantById(Long id) {
 	   Optional<Tenant> optional = repo.findById(id);
-	  return optional.orElseThrow(()-> new TenantNotFoundException("Tenant with id:"+id+"not found"));
+	  Tenant tenant= optional.orElseThrow(()-> new TenantNotFoundException("Tenant with id:"+id+"not found"));
+	  
+	  String role=currentuserService.getCurrentRole();
+	  if(role.equals("SUPER_ADMIN")) {
+		  return tenant;
+	  }
+	  Long currentTenantId=currentuserService.getCurrentTenantId();
+	  if(!currentTenantId.equals(tenant.getId())) {
+		  throw new RuntimeException("You are not allowed to access this tenant");
+	  }
+	  return tenant;
 	}
 
 	@Override
