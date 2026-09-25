@@ -3,6 +3,7 @@ package com.project.SkillHub.Controllers;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -33,18 +34,20 @@ public class Courscontroller {
 		this.service = service;
 	}
 	
+	@PreAuthorize("hasAnyRole('SUPER_ADMIN', 'TENANT_ADMIN')")
 	@PostMapping("/add/{tenant_id}")
 	public ResponseEntity<String>addCourse(@Valid @RequestBody CourseRequestDTO course,@PathVariable("tenant_id")Long tenant_id){
 		
 		String status=service.CreateCourse(tenant_id,course);
 		return new ResponseEntity<String>(status,HttpStatus.CREATED);
 	}
-	
+	@PreAuthorize("hasAnyRole('SUPER_ADMIN', 'TENANT_ADMIN')")
 	@GetMapping("/getall")
 	public ResponseEntity<List>getAllcourses(){
 		List<CourseResponseDTO>ls=service.getAllCourse();
 		return new ResponseEntity<List>(ls,HttpStatus.OK);
 	}
+	@PreAuthorize("hasAnyRole('SUPER_ADMIN', 'TENANT_ADMIN')")
 	@GetMapping("/getbyid/{id}")
 	public ResponseEntity<CourseResponseDTO>getcoursebyid(@PathVariable Long id){
 		
@@ -52,7 +55,7 @@ public class Courscontroller {
 		return new ResponseEntity<CourseResponseDTO>(course,HttpStatus.OK);
 		
 	}
-	
+	@PreAuthorize("hasAnyRole('SUPER_ADMIN', 'TENANT_ADMIN')")
 	@PutMapping("/updatebyid/{id}")
 	public ResponseEntity<String>updatebyid(@PathVariable Long id,@Valid @RequestBody CourseRequestDTO course){
 		
@@ -60,6 +63,7 @@ public class Courscontroller {
 		return new ResponseEntity<String>(status,HttpStatus.OK);
 		
 	} 
+	@PreAuthorize("hasAnyRole('SUPER_ADMIN', 'TENANT_ADMIN')")
 	@DeleteMapping("/deletebyid/{id}")
 public ResponseEntity<String>deletebyid(@PathVariable Long id){
 		
@@ -67,6 +71,7 @@ public ResponseEntity<String>deletebyid(@PathVariable Long id){
 		return new ResponseEntity<String>(status,HttpStatus.OK);
 		
 	}
+	@PreAuthorize("hasAnyRole('SUPER_ADMIN', 'TENANT_ADMIN')")
 	@GetMapping("/tenant/{tenant_id}")
 	public ResponseEntity<List>getallcourses(@PathVariable Long tenant_id){
 		
@@ -74,6 +79,7 @@ public ResponseEntity<String>deletebyid(@PathVariable Long id){
 		
 		return new ResponseEntity<List>(ls,HttpStatus.OK);
 	}
+	@PreAuthorize("hasAnyRole('SUPER_ADMIN', 'TENANT_ADMIN')")
 	@PutMapping("/instructors/{courseId}")
 	public ResponseEntity<String> assignInstructors(
 	        @PathVariable("courseId") Long courseId,
@@ -83,12 +89,14 @@ public ResponseEntity<String>deletebyid(@PathVariable Long id){
 
 	    return new ResponseEntity<String>(status, HttpStatus.OK);
 	}
+	@PreAuthorize("hasAnyRole('SUPER_ADMIN', 'TENANT_ADMIN',INSTRUCTOR)")
 	@GetMapping("/courses/{instructorId}")
 	public ResponseEntity<List>getcoursesbasedoninstructorsid(@PathVariable("instructorId")Long instructorId){
 		
 		List<CourseResponseDTO>courses=service.fetchbyisntructorid(instructorId);
 		return new ResponseEntity<List>(courses,HttpStatus.OK);
 	}
+	@PreAuthorize("hasAnyRole('SUPER_ADMIN', 'TENANT_ADMIN',INSTRUCTOR)")
 	@DeleteMapping("/{courseId}/instructor/{instructorId}")
 	public ResponseEntity<String> removeInstructor(
 	        @PathVariable Long courseId,

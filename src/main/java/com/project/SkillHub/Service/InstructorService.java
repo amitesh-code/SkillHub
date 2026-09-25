@@ -5,36 +5,52 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import com.project.SkillHub.DTO.InstructorRequestDTO;
 import com.project.SkillHub.DTO.InstructorResponseDTO;
 import com.project.SkillHub.DTO.StudentResponseDTO;
+import com.project.SkillHub.Enum.Roles;
 import com.project.SkillHub.Exception.InstructorAssignedToCourseException;
 import com.project.SkillHub.Exception.InstructorNotFoundException;
 import com.project.SkillHub.Exception.TenantNotFoundException;
+import com.project.SkillHub.Exception.UserAlreadyExiest;
 import com.project.SkillHub.Model.Instructor;
 import com.project.SkillHub.Model.Student;
 import com.project.SkillHub.Model.Tenant;
+import com.project.SkillHub.Model.Users;
 import com.project.SkillHub.Repo.CourseRepo;
 import com.project.SkillHub.Repo.InstructorRepo;
 import com.project.SkillHub.Repo.TenantRepo;
+import com.project.SkillHub.Repo.UsersRepo;
 
 @Service
 public class InstructorService implements IinstructorService {
     
 	
-	private InstructorRepo repo;
-	private TenantRepo trepo;
-	private CourseRepo courseRepo;
-	@Autowired
-	public InstructorService(InstructorRepo repo, TenantRepo trepo, CourseRepo courseRepo) {
-	    super();
-	    this.repo = repo;
-	    this.trepo = trepo;
-	    this.courseRepo = courseRepo;
-	}
+	 private InstructorRepo repo;
+	    private TenantRepo trepo;
+	    private CourseRepo courseRepo;
+	    private UsersRepo usersRepo;
+	    private PasswordEncoder passwordEncoder;
 
+	    @Autowired
+	    public InstructorService(
+	            InstructorRepo repo,
+	            TenantRepo trepo,
+	            CourseRepo courseRepo,
+	            UsersRepo usersRepo,
+	            PasswordEncoder passwordEncoder) {
+
+	        super();
+
+	        this.repo = repo;
+	        this.trepo = trepo;
+	        this.courseRepo = courseRepo;
+	        this.usersRepo = usersRepo;
+	        this.passwordEncoder = passwordEncoder;
+	    }
 
 	@Override
 	public String createInstructor(Long tenantId, InstructorRequestDTO instructor) {
@@ -43,6 +59,20 @@ public class InstructorService implements IinstructorService {
 			throw new TenantNotFoundException("Tenant with id:"+tenantId+"Not found ");
 		}
 		Tenant tenant=optional.get();
+		if (usersRepo.existsByEmail(instructor.getEmail())) {
+
+            throw new UserAlreadyExiest(
+                    "user with this email already exiest"
+            );
+        }
+		Users user=new Users();
+		user.setEmail(instructor.getEmail());
+		user.setEnabled(true);
+		user.setPassword(passwordEncoder.encode(instructor.getPassword()));
+		user.setTenant(tenant);
+		user.setRole(Roles.INSTRUCTOR);
+		
+		Users saveduser=usersRepo.save(user);
 		
 		Instructor newinstructor=new Instructor();
 		newinstructor.setName(instructor.getName());

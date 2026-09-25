@@ -4,20 +4,24 @@ import java.util.List;
 
 import com.project.SkillHub.DTO.InstructorRequestDTO;
 import com.project.SkillHub.DTO.InstructorResponseDTO;
-import com.project.SkillHub.Model.Instructor;
 
 public interface IinstructorService {
-	 String createInstructor(Long tenantId, InstructorRequestDTO instructor);
 
-	    InstructorResponseDTO getInstructorById(Long id);
+    String createInstructor(
+            Long tenantId,
+            InstructorRequestDTO instructor
+    );
 
-	    List<InstructorResponseDTO> getAllInstructors();
+    InstructorResponseDTO getInstructorById(Long id);
 
-	    List<InstructorResponseDTO> getInstructorsByTenantId(Long tenantId);
+    List<InstructorResponseDTO> getAllInstructors();
 
-	    String updateInstructor(Long id, InstructorRequestDTO instructor);
+    List<InstructorResponseDTO> getInstructorsByTenantId(Long tenantId);
 
-	    String deleteInstructorById(Long id);
-	    
-	    
+    String updateInstructor(
+            Long id,
+            InstructorRequestDTO instructor
+    );
+
+    String deleteInstructorById(Long id);
 }

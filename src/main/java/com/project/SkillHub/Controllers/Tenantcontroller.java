@@ -42,11 +42,13 @@ public class Tenantcontroller {
 		return new ResponseEntity<String>(status,HttpStatus.CREATED);
 	}
 	
+	@PreAuthorize("hasRole('SUPER_ADMIN')")
 	@GetMapping("/getall")
 	public ResponseEntity<List>getAllTenant(){
 		List<Tenant>ls=service.getAllTenants();
 		return new ResponseEntity<List>(ls,HttpStatus.OK);
 	}
+	@PreAuthorize("hasAnyRole('SUPER_ADMIN', 'TENANT_ADMIN')")
 	@GetMapping("/getbyid/{id}")
 	public ResponseEntity<Tenant>getTenantbyid(@PathVariable Long id){
 		
@@ -55,6 +57,7 @@ public class Tenantcontroller {
 		
 	}
 	
+	@PreAuthorize("hasAnyRole('SUPER_ADMIN', 'TENANT_ADMIN')")
 	@PutMapping("/updatebyid/{id}")
 	public ResponseEntity<String>updatebyid(@PathVariable Long id,@Valid @RequestBody Tenant tenant){
 		
