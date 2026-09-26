@@ -12,7 +12,20 @@ public class StudentRequestDTO {
 	 private String email;
 
 	@NotBlank(message = "Phone is required")
-	private String phone;
+	private String phone;	
+	
+	@NotBlank(message="password is requried")
+	private String password;
+	
+	
+
+	public String getPassword() {
+		return password;
+	}
+
+	public void setPassword(String password) {
+		this.password = password;
+	}
 
 	public String getName() {
 		return name;

@@ -65,6 +65,7 @@ public class Tenantcontroller {
 		return new ResponseEntity<String>(status,HttpStatus.OK);
 		
 	} 
+	@PreAuthorize("hasRole('SUPER_ADMIN')")
 	@DeleteMapping("/deletebyid/{id}")
 public ResponseEntity<String>deletebyid(@PathVariable Long id){
 		

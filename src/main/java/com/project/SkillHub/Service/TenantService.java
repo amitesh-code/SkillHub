@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.project.SkillHub.Exception.TenantHasRecordsException;
+import com.project.SkillHub.Exception.TenantMismatchExcpetion;
 import com.project.SkillHub.Exception.TenantNotFoundException;
 import com.project.SkillHub.Model.Course;
 import com.project.SkillHub.Model.Tenant;
@@ -74,6 +75,16 @@ public class TenantService implements ItenantService {
 		 Optional<Tenant> optional = repo.findById(id);
 		 if(optional.isPresent()) {
 			 Tenant ten=optional.get();
+			 String role=currentuserService.getCurrentRole();
+			 if(!role.equals("SUPER_ADMIN")) {
+				 Long currentTenantId= currentuserService.getCurrentTenantId();
+				 
+				 if(!currentTenantId.equals(ten.getId())) {
+					 throw new TenantMismatchExcpetion(
+			                    "You are not allowed to access this tenant"
+			                );
+				 }
+			 }
 			 ten.setId(id);
 			 ten.setName(tenant.getName());
 			 ten.setEmail(tenant.getEmail());

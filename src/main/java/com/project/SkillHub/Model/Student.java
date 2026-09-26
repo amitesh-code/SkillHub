@@ -6,6 +6,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToOne;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 
@@ -28,6 +29,17 @@ public class Student {
 	@JoinColumn(name="tenant_id")
 	private Tenant tenant;
 	
+	@OneToOne
+	@JoinColumn(name = "user_id", unique = true)
+	private Users user;
+	
+	
+	public Users getUser() {
+		return user;
+	}
+	public void setUser(Users user) {
+		this.user = user;
+	}
 	public Tenant getTenant() {
 		return tenant;
 	}

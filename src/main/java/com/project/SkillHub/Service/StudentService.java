@@ -5,19 +5,26 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import com.project.SkillHub.DTO.StudentRequestDTO;
 import com.project.SkillHub.DTO.StudentResponseDTO;
+import com.project.SkillHub.Enum.Roles;
 import com.project.SkillHub.Exception.StudentActiveEnrollmentException;
 import com.project.SkillHub.Exception.StudentNotFoundException;
+import com.project.SkillHub.Exception.TenantMismatchExcpetion;
 import com.project.SkillHub.Exception.TenantNotFoundException;
+import com.project.SkillHub.Exception.UserAlreadyExiest;
 import com.project.SkillHub.Model.EnrollmentStatus;
 import com.project.SkillHub.Model.Student;
 import com.project.SkillHub.Model.Tenant;
+import com.project.SkillHub.Model.Users;
 import com.project.SkillHub.Repo.EnrollmentRepo;
 import com.project.SkillHub.Repo.StudentRepo;
 import com.project.SkillHub.Repo.TenantRepo;
+import com.project.SkillHub.Repo.UsersRepo;
+import com.project.SkillHub.Security.CurrentUserService;
 
 @Service
 public class StudentService implements IstudentService {
@@ -31,16 +38,47 @@ public class StudentService implements IstudentService {
 	@Autowired
 	private EnrollmentRepo enrollmentRepo;
 	
+	@Autowired
+	private PasswordEncoder passwordEncoder;
+	
+	@Autowired
+	  private UsersRepo usersRepo;
+	
+	@Autowired
+	private CurrentUserService currentuserService;
+	
 	@Override
 	public String createStudent(Long tenant_id, StudentRequestDTO student) {
 		Optional<Tenant> optional = tenantrepo.findById(tenant_id);
 		if(optional.isPresent()) {
 			
+			if(usersRepo.existsByEmail(student.getEmail())) {
+				throw new UserAlreadyExiest("Users with this email already exiest");
+			}
+			
+			String role=currentuserService.getCurrentRole();
+			if(!role.equals("SUPER_ADMIN")) {
+				
+				Long currentTenantId=currentuserService.getCurrentTenantId();
+				if(!currentTenantId.equals(tenant_id)) {
+					throw new TenantMismatchExcpetion("tenant mismatch");
+				}
+				
+			}
+			Users user=new Users();
+			user.setEmail(student.getEmail());
+			user.setEnabled(true);
+			user.setPassword(passwordEncoder.encode(student.getPassword()));
+			user.setRole(Roles.STUDENT);
+			user.setTenant(optional.get());
+			
+			Users saveduser=usersRepo.save(user);
 			Student newstudent=new Student();
 			newstudent.setName(student.getName());
 			newstudent.setEmail(student.getEmail());
 			newstudent.setPhone(student.getPhone());
 			newstudent.setTenant(optional.get());
+			newstudent.setUser(saveduser);
 			Student s=repo.save(newstudent);
 				return "student  successfully saved with id:"+s.getId();
 
@@ -57,6 +95,16 @@ public class StudentService implements IstudentService {
 			 throw new StudentNotFoundException("student with id:"+id+"Not found exception");
 		 }
 		 Student current=optional.get();
+			String role=currentuserService.getCurrentRole();
+			if(!role.equals("SUPER_ADMIN")) {
+				
+				Long currentTenantId=currentuserService.getCurrentTenantId();
+				if(!currentTenantId.equals(current.getTenant().getId())) {
+					throw new TenantMismatchExcpetion("tenant mismatch");
+				}
+				
+			}
+		
 		 StudentResponseDTO str=new StudentResponseDTO();
 		 str.setId(current.getId());
 		 str.setName(current.getName());
@@ -69,9 +117,17 @@ public class StudentService implements IstudentService {
 	@Override
 	public List<StudentResponseDTO> getAllStudents() {
 		
-		List<Student>student=repo.findAll();
+		List<Student>students;
+		String role=currentuserService.getCurrentRole();
+		if(role.equals("SUPER_ADMIN")) {
+			students=repo.findAll();
+		}else {
+			Long tenantId=currentuserService.getCurrentTenantId();
+			students=repo.findByTenant_Id(tenantId);
+		}
+	
 		List<StudentResponseDTO>response=new ArrayList<>();
-		for(Student st:student) {
+		for(Student st:students) {
 			StudentResponseDTO sdto=new StudentResponseDTO();
 			sdto.setId(st.getId());
 			sdto.setName(st.getName());
@@ -84,6 +140,20 @@ public class StudentService implements IstudentService {
 
 	@Override
 	public List<StudentResponseDTO> getStudentsByTenantId(Long tenantId) {
+		
+		Optional<Tenant> optional = tenantrepo.findById(tenantId);
+		if(optional.isEmpty()) {
+		   throw new TenantNotFoundException("tenant with id:"+tenantId+"Not found");
+		}
+		String role=currentuserService.getCurrentRole();
+		if(!role.equals("SUPER_ADMIN")) {
+			
+			Long currentTenantId=currentuserService.getCurrentTenantId();
+			if(!currentTenantId.equals(tenantId)) {
+				throw new TenantMismatchExcpetion("tenant mismatch");
+			}
+			
+		}
 		List<Student>student=repo.findByTenant_Id(tenantId);
 		List<StudentResponseDTO>response=new ArrayList<>();
 		for(Student st:student) {
@@ -104,6 +174,26 @@ public class StudentService implements IstudentService {
 			throw new StudentNotFoundException("Student with id:" +id +"Not found.");
 		}
 		Student current=optional.get();
+		
+		String role=currentuserService.getCurrentRole();
+		if(role.equals("STUDENT")) {
+			Long currentuserId=currentuserService.getCurrentUserId();
+		    Optional<Student>currentStudent=repo.findByUser_Id(currentuserId);
+		    if(currentStudent.isEmpty()) {
+		    	throw new StudentNotFoundException("Student profile not found with id:"+id);
+		    }
+		    if(!id.equals(currentStudent.get().getId())){
+		    	throw new TenantMismatchExcpetion("Tenant mismatch");
+		    }
+		}
+		if(!role.equals("SUPER_ADMIN")&&!role.equals("STUDENT")) {
+			
+			Long currentTenantId=currentuserService.getCurrentTenantId();
+			if(!currentTenantId.equals(current.getTenant().getId())) {
+				throw new TenantMismatchExcpetion("tenant mismatch");
+			}
+			
+		}
 		current.setName(student.getName());
 		current.setPhone(student.getPhone());
 		current.setEmail(student.getEmail());
@@ -122,7 +212,16 @@ public class StudentService implements IstudentService {
 	                "Student with id " + id + " is not found!"
 	        );
 	    }
-
+        
+	    String role=currentuserService.getCurrentRole();
+		if(!role.equals("SUPER_ADMIN")) {
+			
+			Long currentTenantId=currentuserService.getCurrentTenantId();
+			if(!currentTenantId.equals(optional.get().getTenant().getId())) {
+				throw new TenantMismatchExcpetion("tenant mismatch");
+			}
+			
+		}
 	    boolean activeEnrollmentExists =
 	            enrollmentRepo.existsByStudent_IdAndStatus(
 	                    id,

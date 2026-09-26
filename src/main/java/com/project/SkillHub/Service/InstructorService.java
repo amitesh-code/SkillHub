@@ -81,6 +81,8 @@ public class InstructorService implements IinstructorService {
 		newinstructor.setEmail(instructor.getEmail());
 		newinstructor.setTenant(tenant);
 		
+		newinstructor.setUser(saveduser);
+		
 		Instructor inst=repo.save(newinstructor);
 		return "instructor added successfully with id:"+inst.getId();
 		
