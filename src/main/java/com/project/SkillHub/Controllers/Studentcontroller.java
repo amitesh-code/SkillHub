@@ -52,7 +52,7 @@ public class Studentcontroller {
 	        return new ResponseEntity<List<StudentResponseDTO>>(students, HttpStatus.OK);
 	    }
 
-	    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'TENANT_ADMIN')")
+	    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'TENANT_ADMIN','STUDENT')")
 	    @GetMapping("/getbyid/{id}")
 	    public ResponseEntity<StudentResponseDTO> getStudentById(
 	            @PathVariable Long id) {

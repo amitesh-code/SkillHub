@@ -55,7 +55,7 @@ public class Courscontroller {
 		return new ResponseEntity<CourseResponseDTO>(course,HttpStatus.OK);
 		
 	}
-	@PreAuthorize("hasAnyRole('SUPER_ADMIN', 'TENANT_ADMIN')")
+	
 	@PutMapping("/updatebyid/{id}")
 	public ResponseEntity<String>updatebyid(@PathVariable Long id,@Valid @RequestBody CourseRequestDTO course){
 		

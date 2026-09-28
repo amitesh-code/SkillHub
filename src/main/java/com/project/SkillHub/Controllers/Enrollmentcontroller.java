@@ -5,6 +5,7 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -31,6 +32,8 @@ public class Enrollmentcontroller {
     @Autowired
 	IenrollmentService service;
     
+    
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'TENANT_ADMIN', 'STUDENT')")
     @PostMapping("/add")
     public ResponseEntity<String> addEnrollment(
             @Valid @RequestBody EnrollmentRequestDTO enrollment) {
@@ -41,6 +44,7 @@ public class Enrollmentcontroller {
                 status, HttpStatus.CREATED);
     }
 
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'TENANT_ADMIN')")
     @GetMapping("/getall")
     public ResponseEntity<List<EnrollmentResponseDTO>> getAllEnrollments() {
 
@@ -49,7 +53,7 @@ public class Enrollmentcontroller {
         return new ResponseEntity<List<EnrollmentResponseDTO>>(
                 enrollments, HttpStatus.OK);
     }
-
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'TENANT_ADMIN', 'STUDENT','INSTRUCTOR')")
     @GetMapping("/getbyid/{id}")
     public ResponseEntity<EnrollmentResponseDTO> getEnrollmentById(
             @PathVariable Long id) {
@@ -80,6 +84,7 @@ public class Enrollmentcontroller {
         return new ResponseEntity<String>(
                 status, HttpStatus.OK);
     }
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'TENANT_ADMIN', 'INSTRUCTOR')")
     @GetMapping("/enrolledstudent/{courseId}")
     public ResponseEntity<List>getstudentenrolledinCourse(@PathVariable Long courseId){
     	

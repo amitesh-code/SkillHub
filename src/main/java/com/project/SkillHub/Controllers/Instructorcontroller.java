@@ -5,6 +5,7 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -28,6 +29,7 @@ public class Instructorcontroller {
     private IinstructorService service;
 
 
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'TENANT_ADMIN')")
     @PostMapping("/add/{tenant_id}")
     public ResponseEntity<String> addInstructor(
             @Valid @RequestBody InstructorRequestDTO instructor,
@@ -57,7 +59,7 @@ public class Instructorcontroller {
         );
     }
 
-
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'TENANT_ADMIN', 'INSTRUCTOR')")
     @GetMapping("/getbyid/{id}")
     public ResponseEntity<InstructorResponseDTO> getInstructorbyid(
             @PathVariable Long id) {
@@ -72,6 +74,7 @@ public class Instructorcontroller {
     }
 
 
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'TENANT_ADMIN', 'INSTRUCTOR')")
     @PutMapping("/updatebyid/{id}")
     public ResponseEntity<String> updatebyid(
             @PathVariable Long id,
@@ -87,6 +90,7 @@ public class Instructorcontroller {
     }
 
 
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'TENANT_ADMIN')")
     @DeleteMapping("/deletebyid/{id}")
     public ResponseEntity<String> deletebyid(
             @PathVariable Long id) {
@@ -101,6 +105,7 @@ public class Instructorcontroller {
     }
 
 
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'TENANT_ADMIN')")
     @GetMapping("/tenant/{tenant_id}")
     public ResponseEntity<List> getallInstructors(
             @PathVariable Long tenant_id) {
@@ -113,4 +118,5 @@ public class Instructorcontroller {
                 HttpStatus.OK
         );
     }
+    
 }

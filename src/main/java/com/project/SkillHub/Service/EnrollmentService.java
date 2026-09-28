@@ -16,6 +16,7 @@ import com.project.SkillHub.DTO.InstructorResponseDTO;
 import com.project.SkillHub.DTO.StudentResponseDTO;
 import com.project.SkillHub.Exception.CourseNotFoundException;
 import com.project.SkillHub.Exception.EnrollmentNotFoundException;
+import com.project.SkillHub.Exception.InstructorNotFoundException;
 import com.project.SkillHub.Exception.StudentNotFoundException;
 import com.project.SkillHub.Exception.TenantMismatchExcpetion;
 import com.project.SkillHub.Model.Course;
@@ -25,7 +26,9 @@ import com.project.SkillHub.Model.Instructor;
 import com.project.SkillHub.Model.Student;
 import com.project.SkillHub.Repo.CourseRepo;
 import com.project.SkillHub.Repo.EnrollmentRepo;
+import com.project.SkillHub.Repo.InstructorRepo;
 import com.project.SkillHub.Repo.StudentRepo;
+import com.project.SkillHub.Security.CurrentUserService;
 
 @Service
 public class EnrollmentService implements IenrollmentService {
@@ -34,13 +37,16 @@ public class EnrollmentService implements IenrollmentService {
 	private EnrollmentRepo repo;
 	private StudentRepo studentrepo;
 	private CourseRepo courserepo;
-	
+	private InstructorRepo instructorrepo;
+	private CurrentUserService currentuserService;
 	@Autowired
-	public EnrollmentService(EnrollmentRepo repo, StudentRepo studentrepo, CourseRepo courserepo) {
+	public EnrollmentService(EnrollmentRepo repo, StudentRepo studentrepo, CourseRepo courserepo,CurrentUserService currentuserService,InstructorRepo instructorrepo) {
 		super();
 		this.repo = repo;
 		this.studentrepo = studentrepo;
 		this.courserepo = courserepo;
+		this.currentuserService=currentuserService;
+		this.instructorrepo=instructorrepo;
 	}
 	//Instructor->InstructorResponseDTO
 	private List<InstructorResponseDTO>getInstructorResponseDto(List<Instructor>instructors) {
@@ -99,6 +105,29 @@ public class EnrollmentService implements IenrollmentService {
 		if(!studentTenantId.equals(courseTenantId)) {
 			throw new TenantMismatchExcpetion("student and course belong to different tenants");
 		}
+		
+		String role=currentuserService.getCurrentRole();
+		
+		if(role.equals("STUDENT")) {
+			Long currentuserId=currentuserService.getCurrentUserId();
+			
+			Optional<Student>stud=studentrepo.findByUser_Id(currentuserId);
+			if(stud.isEmpty()) {
+				throw new StudentNotFoundException("student profile with userid:"+currentuserId+"Not found");
+			}
+			if(!stud.get().getId().equals(student.getId())) {
+				throw new RuntimeException("current student user try to enroll other students");
+			}
+		}
+		
+		if(!role.equals("SUPER_ADMIN")&&!role.equals("STUDENT")) {
+			Long usertenantId=currentuserService.getCurrentTenantId();
+			if(!usertenantId.equals(student.getTenant().getId())) {
+				throw new TenantMismatchExcpetion("Tenant mismatch");
+			}
+		}
+		
+		
 		boolean activeEnrollmentExists =
 		        repo.existsByStudent_IdAndCourse_IdAndStatus(
 		                enrollment.getStudentId(),
@@ -112,8 +141,8 @@ public class EnrollmentService implements IenrollmentService {
 
 		boolean completedEnrollmentExists =
 		        repo.existsByStudent_IdAndCourse_IdAndStatus(
-		                enrollment.getStudentId(),
-		                enrollment.getCourseId(),
+		                student.getId(),
+		                course.getId(),
 		                EnrollmentStatus.COMPLETED
 		        );
 
@@ -129,34 +158,100 @@ public class EnrollmentService implements IenrollmentService {
 		
 		
 		Enrollment saved = repo.save(enr);
-		return "Enrollment added successfully with id:"+enr.getId();
+		return "Enrollment added successfully with id:"+saved.getId();
 	}
 
 	@Override
 	public EnrollmentResponseDTO getEnrollmentById(Long id) {
 
 	    Optional<Enrollment> optional = repo.findById(id);
-	  
+
 	    if(optional.isEmpty()) {
-	    	throw new EnrollmentNotFoundException("enrollment with id:"+id+"Not found");
+	        throw new EnrollmentNotFoundException(
+	            "enrollment with id:"+id+"Not found"
+	        );
 	    }
-	    Enrollment enrl=optional.get();
-	    EnrollmentResponseDTO dto=new EnrollmentResponseDTO();
+
+	    Enrollment enrl = optional.get();
+
+	    String role = currentuserService.getCurrentRole();
+
+	    if(role.equals("STUDENT")) {
+
+	        Long currentuserId = currentuserService.getCurrentUserId();
+
+	        Optional<Student> stud =
+	                studentrepo.findByUser_Id(currentuserId);
+
+	        if(stud.isEmpty()) {
+	            throw new StudentNotFoundException(
+	                "student profile with user id:"+currentuserId+"Not found"
+	            );
+	        }
+
+	        if(!stud.get().getId().equals(enrl.getStudent().getId())) {
+	            throw new TenantMismatchExcpetion(
+	                "Student can only access their own enrollments"
+	            );
+	        }
+	    }
+
+	    if(role.equals("INSTRUCTOR")) {
+
+	        Long currentuserId = currentuserService.getCurrentUserId();
+
+	        Optional<Instructor> instr =
+	                instructorrepo.findByUser_Id(currentuserId);
+
+	        if(instr.isEmpty()) {
+	            throw new InstructorNotFoundException(
+	                "Instructor profile with given userid:"
+	                +currentuserId+"Not found"
+	            );
+	        }
+
+	        if(!enrl.getCourse().getInstructors().contains(instr.get())) {
+	            throw new TenantMismatchExcpetion(
+	                "Instructor is not assigned to this course"
+	            );
+	        }
+	    }
+
+	    if(role.equals("TENANT_ADMIN")) {
+
+	        Long currentuserTenantId =
+	                currentuserService.getCurrentTenantId();
+
+	        if(!currentuserTenantId.equals(
+	                enrl.getStudent().getTenant().getId())) {
+
+	            throw new TenantMismatchExcpetion(
+	                "Tenant mismatch"
+	            );
+	        }
+	    }
+
+	    EnrollmentResponseDTO dto = new EnrollmentResponseDTO();
+
 	    dto.setId(enrl.getId());
 	    dto.setCourse(getcourseresponsedto(enrl.getCourse()));
 	    dto.setStatus(enrl.getStatus().name());
 	    dto.setStudent(getstudentresponsedto(enrl.getStudent()));
 	    dto.setEnrollmentDate(enrl.getEnrollmentDate());
-	    return dto;
-	    
-	    
-	   
-	}
 
+	    return dto;
+	}
 	@Override
 	public List<EnrollmentResponseDTO> getAllEnrollments() {
-
-	    List<Enrollment>enrollments=repo.findAll();
+         List<Enrollment>enrollments;
+         String role=currentuserService.getCurrentRole();
+         if(role.equals("SUPER_ADMIN")) {
+        	 enrollments=repo.findAll();
+         }else {
+        	 Long tenantId=currentuserService.getCurrentTenantId();
+        	 enrollments=repo.findByStudent_Tenant_Id(tenantId);
+         }
+	 
 	    List<EnrollmentResponseDTO>response=new ArrayList<>();
 	    for(Enrollment enrl:enrollments) {
 	    	EnrollmentResponseDTO enr = new EnrollmentResponseDTO();
@@ -222,6 +317,25 @@ public class EnrollmentService implements IenrollmentService {
 	        
 	        
 	    }
+	    String role=currentuserService.getCurrentRole();
+	    if(role.equals("INSTRUCTOR")) {
+	    	Long currentuserId=currentuserService.getCurrentUserId();
+	    	Optional<Instructor>instr=instructorrepo.findByUser_Id(currentuserId);
+	    	if(instr.isEmpty()) {
+	    		throw new InstructorNotFoundException("instructor with with user id:"+currentuserId+"Not found");
+	    	}
+	    	if(!optional.get().getInstructors().contains(instr.get())) {
+	    		throw new TenantMismatchExcpetion("only assinged instructors are allowed to see the enrolled students");
+	    	}
+	    }
+	    
+	    if(role.equals("TENANT_ADMIN")) {
+	    	Long tenantId=currentuserService.getCurrentTenantId();
+	    	if(!tenantId.equals(optional.get().getTenant().getId())) {
+	    		throw new TenantMismatchExcpetion("Tenant mismatch");
+	    	}
+	    	
+	    }
 
 	    List<Enrollment> enrollments = repo.findByCourse_Id(courseId);
 
@@ -244,6 +358,25 @@ public class EnrollmentService implements IenrollmentService {
 		            "Student with id: " + studentId + " not found"
 		        );
 		    }
+		    String role=currentuserService.getCurrentRole();
+		    if(role.equals("STUDENT")) {
+		    	Long currentuserId=currentuserService.getCurrentUserId();
+		    	Optional<Student>std=studentrepo.findByUser_Id(currentuserId);
+		    	if(std.isEmpty()) {
+		    		throw new StudentNotFoundException("student profile with user  id:"+currentuserId+"Not found");
+		    	}
+		    	
+		    	if(!studentId.equals(std.get().getId())) {
+		    		throw new TenantMismatchExcpetion("students are only allowed to get his enrolled courses");
+		    	}
+		    	
+		    }
+		    if(role.equals("TENANT_ADMIN")) {
+		    	Long tenantId=currentuserService.getCurrentTenantId();
+		    	if(!tenantId.equals(optional.get().getTenant().getId())) {
+		    		throw new TenantMismatchExcpetion("Tenant mismatch");
+		    	}
+		    }
 
 		    List<Enrollment> enrollments= repo.findByStudent_Id(studentId);
 
@@ -263,6 +396,14 @@ public class EnrollmentService implements IenrollmentService {
 			 throw new EnrollmentNotFoundException("Enrollment with id:"+id+"not found ");
 		 }
 		 Enrollment enrollment=optional.get();
+		 
+		 String role=currentuserService.getCurrentRole();
+		 if(!role.equals("SUPER_ADMIN")) {
+			 Long tenantId=currentuserService.getCurrentTenantId();
+			 if(!tenantId.equals(enrollment.getStudent().getTenant().getId())) {
+				 throw new TenantMismatchExcpetion("Tenant mismatch");
+			 }
+		 }
 		 if (enrollment.getStatus() != EnrollmentStatus.ACTIVE) {
 		        return "Only active enrollment can be completed";
 		    }

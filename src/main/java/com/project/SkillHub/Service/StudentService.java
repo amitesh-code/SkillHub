@@ -95,8 +95,18 @@ public class StudentService implements IstudentService {
 			 throw new StudentNotFoundException("student with id:"+id+"Not found exception");
 		 }
 		 Student current=optional.get();
-			String role=currentuserService.getCurrentRole();
-			if(!role.equals("SUPER_ADMIN")) {
+		 String role=currentuserService.getCurrentRole();
+			if(role.equals("STUDENT")) {
+				Long currentuserId=currentuserService.getCurrentUserId();
+			    Optional<Student>currentStudent=repo.findByUser_Id(currentuserId);
+			    if(currentStudent.isEmpty()) {
+			    	throw new StudentNotFoundException("Student profile not found with id:"+id);
+			    }
+			    if(!id.equals(currentStudent.get().getId())){
+			    	throw new TenantMismatchExcpetion("Tenant mismatch");
+			    }
+			}
+			if(!role.equals("SUPER_ADMIN")&&!role.equals("STUDENT")) {
 				
 				Long currentTenantId=currentuserService.getCurrentTenantId();
 				if(!currentTenantId.equals(current.getTenant().getId())) {
@@ -233,7 +243,11 @@ public class StudentService implements IstudentService {
 	                "Student cannot be deleted because they have an active enrollment"
 	        );
 	    }
-
+        Users user=optional.get().getUser();
+        if(user!=null) {
+        	user.setEnabled(false);
+        	usersRepo.save(user);
+        }
 	    repo.deleteById(id);
 
 	    return "Student with given id, deleted successfully!";
