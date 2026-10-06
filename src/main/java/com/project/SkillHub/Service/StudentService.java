@@ -233,15 +233,11 @@ public class StudentService implements IstudentService {
 			
 		}
 	    boolean activeEnrollmentExists =
-	            enrollmentRepo.existsByStudent_IdAndStatus(
-	                    id,
-	                    EnrollmentStatus.ACTIVE
-	            );
+	            enrollmentRepo.existsByStudent_Id(id);
 
 	    if (activeEnrollmentExists) {
 	        throw new StudentActiveEnrollmentException(
-	                "Student cannot be deleted because they have an active enrollment"
-	        );
+	        		"Student cannot be deleted because enrollment history exists");
 	    }
         Users user=optional.get().getUser();
         if(user!=null) {

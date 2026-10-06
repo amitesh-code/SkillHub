@@ -64,26 +64,26 @@ public class Enrollmentcontroller {
                 enrollment, HttpStatus.OK);
     }
 
-    @PutMapping("/updatebyid/{id}")
-    public ResponseEntity<String> updateEnrollment(
-            @PathVariable Long id,
-            @RequestBody Enrollment enrollment) {
+//    @PutMapping("/updatebyid/{id}")
+//    public ResponseEntity<String> updateEnrollment(
+//            @PathVariable Long id,
+//            @RequestBody Enrollment enrollment) {
+//
+//        String status = service.updateEnrollment(id, enrollment);
+//
+//        return new ResponseEntity<String>(
+//                status, HttpStatus.OK);
+//    }
 
-        String status = service.updateEnrollment(id, enrollment);
-
-        return new ResponseEntity<String>(
-                status, HttpStatus.OK);
-    }
-
-    @DeleteMapping("/deletebyid/{id}")
-    public ResponseEntity<String> deleteEnrollment(
-            @PathVariable Long id) {
-
-        String status = service.deleteEnrollmentById(id);
-
-        return new ResponseEntity<String>(
-                status, HttpStatus.OK);
-    }
+//    @DeleteMapping("/deletebyid/{id}")
+//    public ResponseEntity<String> deleteEnrollment(
+//            @PathVariable Long id) {
+//
+//        String status = service.deleteEnrollmentById(id);
+//
+//        return new ResponseEntity<String>(
+//                status, HttpStatus.OK);
+//    }
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'TENANT_ADMIN', 'INSTRUCTOR')")
     @GetMapping("/enrolledstudent/{courseId}")
     public ResponseEntity<List>getstudentenrolledinCourse(@PathVariable Long courseId){
@@ -93,17 +93,20 @@ public class Enrollmentcontroller {
     	return new ResponseEntity<List>(ls,HttpStatus.OK);
     	
     }
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'TENANT_ADMIN', 'STUDENT')")
     @GetMapping("/coursesofstudent/{studentId}")
     public ResponseEntity<List>getcoursesbasedonstudentId(@PathVariable("studentId")Long studentId){
     	List<CourseResponseDTO>ls=service.fetchcoursesbystudent_id(studentId);
     	return new ResponseEntity<List>(ls,HttpStatus.OK);
     }
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'TENANT_ADMIN')")
     @PutMapping("/completed/{id}")
     public ResponseEntity<String>compltecourse(@PathVariable("id")Long id){
     	String status=service.completeEnrollment(id);
     	return new ResponseEntity<String>(status,HttpStatus.OK);
     }
     
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'TENANT_ADMIN', 'STUDENT')")
     @PutMapping("/cancel/{id}")
     public ResponseEntity<String>canceledcourse(@PathVariable ("id")Long id){
     	String status=service.cancelEnrollment(id);

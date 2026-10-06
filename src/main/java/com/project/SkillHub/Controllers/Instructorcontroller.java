@@ -47,6 +47,7 @@ public class Instructorcontroller {
     }
 
 
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'TENANT_ADMIN')")
     @GetMapping("/getall")
     public ResponseEntity<List> getAllInstructors() {
 

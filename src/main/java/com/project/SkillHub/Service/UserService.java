@@ -120,9 +120,14 @@ public class UserService implements IuserService {
 		}
 		if(role.equals("TENANT_ADMIN")) {
 			Long currentTenantId=currentuserService.getCurrentTenantId();
-			if(!currentTenantId.equals(user.getTenant().getId())) {
-				throw new TenantMismatchExcpetion("Tenant mismatch");
+			if(user.getTenant()==null) {
+				throw  new TenantMismatchExcpetion("Tenant admin are not allowed to access superadmin");
 			}
+			 
+			if( !currentTenantId.equals(user.getTenant().getId())) {
+
+				        throw new TenantMismatchExcpetion("Tenant mismatch");
+				    }
 		}
 		return convertToResponseDTO(user);
 	}
@@ -146,9 +151,15 @@ public class UserService implements IuserService {
 		}
 		if(role.equals("TENANT_ADMIN")) {
 			Long currentTenantId=currentuserService.getCurrentTenantId();
-			if(!currentTenantId.equals(user.getTenant().getId())) {
-				throw new TenantMismatchExcpetion("Tenant mismatch");
-			}
+			 if(user.getTenant() == null) {
+			        throw new TenantMismatchExcpetion(
+			            "Tenant admin are not allowed to access superadmin"
+			        );
+			    }
+
+			    if(!currentTenantId.equals(user.getTenant().getId())) {
+			        throw new TenantMismatchExcpetion("Tenant mismatch");
+			    }
 		}
     return convertToResponseDTO(user);
 	}

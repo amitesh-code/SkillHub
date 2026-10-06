@@ -422,6 +422,25 @@ public class EnrollmentService implements IenrollmentService {
 			 throw new EnrollmentNotFoundException("Enrollment with id:"+id+"not found ");
 		 }
 		 Enrollment enrollment=optional.get();
+		 String role=currentuserService.getCurrentRole();
+		    if(role.equals("STUDENT")) {
+		    	Long currentuserId=currentuserService.getCurrentUserId();
+		    	Optional<Student>std=studentrepo.findByUser_Id(currentuserId);
+		    	if(std.isEmpty()) {
+		    		throw new StudentNotFoundException("student profile with user  id:"+currentuserId+"Not found");
+		    	}
+		    	
+		    	if(!enrollment.getStudent().getId().equals(std.get().getId())) {
+		    		throw new TenantMismatchExcpetion("students are only allowed to cancel his courses");
+		    	}
+		    	
+		    }
+		    if(role.equals("TENANT_ADMIN")) {
+		    	 Long tenantId=currentuserService.getCurrentTenantId();
+				 if(!tenantId.equals(enrollment.getStudent().getTenant().getId())) {
+					 throw new TenantMismatchExcpetion("Tenant mismatch");
+				 }
+		    }
 		 if (enrollment.getStatus() != EnrollmentStatus.ACTIVE) {
 		        return "Only active enrollment can be canceled";
 		    }

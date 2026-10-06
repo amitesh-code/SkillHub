@@ -14,6 +14,7 @@ import com.project.SkillHub.DTO.StudentResponseDTO;
 import com.project.SkillHub.Enum.Roles;
 import com.project.SkillHub.Exception.InstructorAssignedToCourseException;
 import com.project.SkillHub.Exception.InstructorNotFoundException;
+import com.project.SkillHub.Exception.TenantMismatchExcpetion;
 import com.project.SkillHub.Exception.TenantNotFoundException;
 import com.project.SkillHub.Exception.UserAlreadyExiest;
 import com.project.SkillHub.Model.Instructor;
@@ -24,6 +25,7 @@ import com.project.SkillHub.Repo.CourseRepo;
 import com.project.SkillHub.Repo.InstructorRepo;
 import com.project.SkillHub.Repo.TenantRepo;
 import com.project.SkillHub.Repo.UsersRepo;
+import com.project.SkillHub.Security.CurrentUserService;
 
 @Service
 public class InstructorService implements IinstructorService {
@@ -34,6 +36,8 @@ public class InstructorService implements IinstructorService {
 	    private CourseRepo courseRepo;
 	    private UsersRepo usersRepo;
 	    private PasswordEncoder passwordEncoder;
+	    private CurrentUserService currentuserService;
+	    private InstructorRepo instructorRepo;
 
 	    @Autowired
 	    public InstructorService(
@@ -41,7 +45,9 @@ public class InstructorService implements IinstructorService {
 	            TenantRepo trepo,
 	            CourseRepo courseRepo,
 	            UsersRepo usersRepo,
-	            PasswordEncoder passwordEncoder) {
+	            PasswordEncoder passwordEncoder,
+	            CurrentUserService currentuserService,
+	            InstructorRepo instructorRepo) {
 
 	        super();
 
@@ -50,13 +56,24 @@ public class InstructorService implements IinstructorService {
 	        this.courseRepo = courseRepo;
 	        this.usersRepo = usersRepo;
 	        this.passwordEncoder = passwordEncoder;
+	        this.currentuserService=currentuserService;
+	        this.instructorRepo=instructorRepo;
 	    }
 
 	@Override
 	public String createInstructor(Long tenantId, InstructorRequestDTO instructor) {
 		Optional<Tenant> optional = trepo.findById(tenantId);
+		
 		if(optional.isEmpty()) {
 			throw new TenantNotFoundException("Tenant with id:"+tenantId+"Not found ");
+		}
+		String role=currentuserService.getCurrentRole();
+		if(role.equals("TENANT_ADMIN")) {
+			Long currenttenantId=currentuserService.getCurrentTenantId();
+			if(!currenttenantId.equals(tenantId)) {
+				throw new TenantMismatchExcpetion("Tenant mismatch");
+			}
+			
 		}
 		Tenant tenant=optional.get();
 		if (usersRepo.existsByEmail(instructor.getEmail())) {
@@ -65,6 +82,7 @@ public class InstructorService implements IinstructorService {
                     "user with this email already exiest"
             );
         }
+		
 		Users user=new Users();
 		user.setEmail(instructor.getEmail());
 		user.setEnabled(true);
@@ -95,7 +113,23 @@ public class InstructorService implements IinstructorService {
 			throw new InstructorNotFoundException("instructor with id:"+id+"Not found");
 		}
 		Instructor instructor=optional.get();
-		
+		String role=currentuserService.getCurrentRole();
+		if(role.equals("INSTRUCTOR")) {
+			Long currentuserId=currentuserService.getCurrentUserId();
+			Optional<Instructor>inst=instructorRepo.findByUser_Id(currentuserId);
+			if(inst.isEmpty()) {
+				throw new InstructorNotFoundException("instructor profile with given user id:"+currentuserId+"Not found");
+			}
+		if(!inst.get().getId().equals(id)) {
+			throw new TenantMismatchExcpetion("instructor are only allowed to get his info");
+		}
+		}
+		if(role.equals("TENANT_ADMIN")) {
+			Long tenantId=currentuserService.getCurrentTenantId();
+			if(!tenantId.equals(instructor.getTenant().getId())) {
+				 throw new TenantMismatchExcpetion("Tenant Mismatch");
+			}
+		}
 		InstructorResponseDTO idto=new InstructorResponseDTO();
 		idto.setId(instructor.getId());
 		idto.setName(instructor.getName());
@@ -109,7 +143,15 @@ public class InstructorService implements IinstructorService {
 
 	@Override
 	public List<InstructorResponseDTO> getAllInstructors() {
-		List<Instructor>instructor=repo.findAll();
+		List<Instructor>instructor;
+		String role=currentuserService.getCurrentRole();
+		if(role.equals("SUPER_ADMIN")) {
+			instructor=repo.findAll();
+		}else {
+			Long tenantId=currentuserService.getCurrentTenantId();
+			instructor=repo.findByTenant_Id(tenantId);
+		}
+	
 		List<InstructorResponseDTO>response=new ArrayList<>();
 		for(Instructor st:instructor) {
 			InstructorResponseDTO sdto=new InstructorResponseDTO();
@@ -125,7 +167,24 @@ public class InstructorService implements IinstructorService {
 
 	@Override
 	public List<InstructorResponseDTO> getInstructorsByTenantId(Long tenantId) {
+		
+		Optional<Tenant> optional = trepo.findById(tenantId);
+
+		if(optional.isEmpty()) {
+		    throw new TenantNotFoundException(
+		        "Tenant with id:"+tenantId+" not found"
+		    );
+		}
+		String role=currentuserService.getCurrentRole();
+		if(role.equals("TENANT_ADMIN")) {
+			Long currentTenantId=currentuserService.getCurrentTenantId();
+			if(!currentTenantId.equals(tenantId)) {
+				throw new TenantMismatchExcpetion("Tenant mismatch");
+			}
+		}
 		    List<Instructor> instructor = repo.findByTenant_Id(tenantId);
+		    
+		   
 		List<InstructorResponseDTO>response=new ArrayList<>();
 		for(Instructor st:instructor) {
 			InstructorResponseDTO sdto=new InstructorResponseDTO();
@@ -140,26 +199,66 @@ public class InstructorService implements IinstructorService {
 		
 		
 	}
-
 	@Override
 	public String updateInstructor(Long id, InstructorRequestDTO instructor) {
-		  Optional<Instructor> optional = repo.findById(id);
-          
-		    if (optional.isPresent()) {
-                
-		    
-		        Instructor existing = optional.get();
 
-		        existing.setName(instructor.getName());
-		        existing.setEmail(instructor.getEmail());
-		        existing.setPhone(instructor.getPhone());
-		        existing.setExpertise(instructor.getExpertise());
+	    Optional<Instructor> optional = repo.findById(id);
 
-		        repo.save(existing);
+	    if(optional.isPresent()) {
 
-		        return "Instructor with id: " + id + " updated successfully";
-		    }
-	    throw new InstructorNotFoundException("Instructor with id: "+id+"not found");
+	        Instructor existing = optional.get();
+
+	        String role = currentuserService.getCurrentRole();
+
+	        if(role.equals("INSTRUCTOR")) {
+
+	            Long currentUserid =
+	                    currentuserService.getCurrentUserId();
+
+	            Optional<Instructor> instr =
+	                    instructorRepo.findByUser_Id(currentUserid);
+
+	            if(instr.isEmpty()) {
+	                throw new InstructorNotFoundException(
+	                    "instructor profile with given user id:"
+	                    +currentUserid+"Not found"
+	                );
+	            }
+
+	            if(!instr.get().getId().equals(id)) {
+	                throw new TenantMismatchExcpetion(
+	                    "Instructor is only allowed to update their own info"
+	                );
+	            }
+	        }
+
+	        if(role.equals("TENANT_ADMIN")) {
+
+	            Long currentTenantId =
+	                    currentuserService.getCurrentTenantId();
+
+	            if(!currentTenantId.equals(
+	                    existing.getTenant().getId())) {
+
+	                throw new TenantMismatchExcpetion(
+	                    "Tenant mismatch"
+	                );
+	            }
+	        }
+
+	        existing.setName(instructor.getName());
+	        existing.setPhone(instructor.getPhone());
+	        existing.setExpertise(instructor.getExpertise());
+
+	        repo.save(existing);
+
+	        return "Instructor with id: " + id +
+	               " updated successfully";
+	    }
+
+	    throw new InstructorNotFoundException(
+	        "Instructor with id: " + id + " not found"
+	    );
 	}
 
 	@Override
@@ -167,23 +266,50 @@ public class InstructorService implements IinstructorService {
 
 	    Optional<Instructor> optional = repo.findById(id);
 
-	    if (optional.isEmpty()) {
+	    if(optional.isEmpty()) {
 	        throw new InstructorNotFoundException(
 	            "Instructor with id: " + id + " not found"
 	        );
 	    }
 
-	    boolean assignedToCourse = courseRepo.existsByInstructors_Id(id);
+	    Instructor instructor = optional.get();
 
-	    if (assignedToCourse) {
+	    String role = currentuserService.getCurrentRole();
+
+	    if(role.equals("TENANT_ADMIN")) {
+
+	        Long currentTenantId =
+	                currentuserService.getCurrentTenantId();
+
+	        if(!currentTenantId.equals(
+	                instructor.getTenant().getId())) {
+
+	            throw new TenantMismatchExcpetion(
+	                "Tenant mismatch"
+	            );
+	        }
+	    }
+
+	    boolean assignedToCourse =
+	            courseRepo.existsByInstructors_Id(id);
+
+	    if(assignedToCourse) {
 	        throw new InstructorAssignedToCourseException(
 	            "Instructor cannot be deleted because they are assigned to a course"
 	        );
 	    }
 
+	    Users user = instructor.getUser();
+
+	    if(user != null) {
+	        user.setEnabled(false);
+	        usersRepo.save(user);
+	    }
+
 	    repo.deleteById(id);
 
-	    return "Instructor with id: " + id + " deleted successfully";
+	    return "Instructor with id: " + id +
+	           " deleted successfully";
 	}
 
 }

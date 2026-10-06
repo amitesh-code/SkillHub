@@ -27,7 +27,7 @@ public class Users {
 	private String email;
 	 
 	@NotBlank(message="password is required")
-	@Column(nullable=false,unique=true)
+	@Column(nullable=false)
 	private String password;
 	@NotNull(message="Role is required")
 	@Column(nullable=false)
@@ -90,8 +90,8 @@ public class Users {
 
 	@Override
 	public String toString() {
-		return "Users [id=" + id + ", email=" + email + ", password=" + password + ", role=" + role + ", enabled="
-				+ enabled + ", tenant=" + tenant + "]";
+	    return "Users [id=" + id + ", email=" + email + ", role=" + role + ", enabled="
+	            + enabled + ", tenant=" + tenant + "]";
 	}
 	 public Users() {
 	    }

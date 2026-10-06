@@ -5,6 +5,8 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import com.project.SkillHub.DTO.CourseRequestDTO;
@@ -21,370 +23,444 @@ import com.project.SkillHub.Repo.CourseRepo;
 import com.project.SkillHub.Repo.InstructorRepo;
 import com.project.SkillHub.Repo.TenantRepo;
 import com.project.SkillHub.Security.CurrentUserService;
+
 @Service
 public class CourseService implements IcourseService {
-	
 
-	private CourseRepo repo;
-	private TenantRepo tenantrepo;
-	private InstructorRepo instrepo;
-	private CurrentUserService currentuserService;
-	  @Autowired
-		public CourseService(CourseRepo repo, TenantRepo tenantrepo, InstructorRepo instrepo,CurrentUserService currentuserService) {
-			super();
-			this.repo = repo;
-			this.tenantrepo = tenantrepo;
-			this.instrepo = instrepo;
-			this.currentuserService=currentuserService;
-		}
-	//
-	private List<InstructorResponseDTO>getInstructorResponseDto(List<Instructor>instructors) {
-      List<InstructorResponseDTO>response=new ArrayList<>();
-		
-		for(Instructor instr:instructors) {
-			InstructorResponseDTO dto=new InstructorResponseDTO();
-			dto.setId(instr.getId());
-			dto.setName(instr.getName());
-			dto.setEmail(instr.getEmail());
-			dto.setPhone(instr.getPhone());
-			dto.setExpertise(instr.getExpertise());		
-			response.add(dto);
-		}
-		return response;
-	}
-	private List<CourseResponseDTO>getcourseRespnseDto(List<Course>courses){
+    private CourseRepo repo;
+    private TenantRepo tenantrepo;
+    private InstructorRepo instrepo;
+    private CurrentUserService currentuserService;
 
-		List<CourseResponseDTO>response=new ArrayList<>();
-	  
-		for(Course cs:courses) {
-			CourseResponseDTO dto=new CourseResponseDTO();
-			dto.setActive(cs.getActive());
-			dto.setId(cs.getId());
-			dto.setName(cs.getName());
-			dto.setPrice(cs.getPrice());
-			dto.setDescription(cs.getDescription());
-			dto.setDuration(cs.getDuration());
-			dto.setInstructors(getInstructorResponseDto(cs.getInstructors()));
-			response.add(dto);
-		}
-		return response;
-	}
-	
-  
+    @Autowired
+    public CourseService(
+            CourseRepo repo,
+            TenantRepo tenantrepo,
+            InstructorRepo instrepo,
+            CurrentUserService currentuserService) {
 
-	@Override
-	public String CreateCourse(Long tenant_id,CourseRequestDTO course) {
-		            
-		Optional<Tenant> optional = tenantrepo.findById(tenant_id);
-		if(optional.isEmpty()) {
-			throw new TenantNotFoundException("Tenant with id:"+tenant_id+"Not found ");
-		}
-		Tenant tenant=optional.get();
-		String role=currentuserService.getCurrentRole();
-		if(!role.equals("SUPER_ADMIN")) {
-			Long tenantId=currentuserService.getCurrentTenantId();
-			if(!tenantId.equals(tenant.getId())) {
-				throw new TenantMismatchExcpetion("Tenant  mismatch");
-			}
-		}
-		
-		Course newcourse=new Course();
-		newcourse.setName(course.getName());
-		newcourse.setPrice(course.getPrice());;
-		newcourse.setDescription(course.getDescription());;
-		newcourse.setDuration(course.getDuration());
-		newcourse.setTenant(tenant);
-		
-		Course c=repo.save(newcourse);
-		return "course added successfully with id:"+c.getId();
-	}
-	@Override
-	public CourseResponseDTO getCourseByid(Long id)  {
-		
-		Optional<Course> optional = repo.findByIdAndActiveTrue(id);
-		if(optional.isEmpty()) {
-			throw new CourseNotFoundException(
-				    "Course with id:" + id + " not found"
-				);
-		}
-		Course cs=optional.get();
-		String role=currentuserService.getCurrentRole();
-		if(!role.equals("SUPER_ADMIN")) {
-			Long tenantId=currentuserService.getCurrentTenantId();
-			if(!tenantId.equals(cs.getTenant().getId())) {
-				throw new TenantMismatchExcpetion("Tenant  mismatch");
-			}
-		}
-		
-		CourseResponseDTO dto=new CourseResponseDTO();
-		
-		dto.setActive(cs.getActive());
-		dto.setId(cs.getId());
-		dto.setName(cs.getName());
-		dto.setPrice(cs.getPrice());
-		dto.setDescription(cs.getDescription());
-		dto.setDuration(cs.getDuration());
-		dto.setInstructors(getInstructorResponseDto(cs.getInstructors()));
-		
-		return dto;
-	}
+        super();
+        this.repo = repo;
+        this.tenantrepo = tenantrepo;
+        this.instrepo = instrepo;
+        this.currentuserService = currentuserService;
+    }
 
-	@Override
-	public List<CourseResponseDTO> getAllCourse() {
+    // Instructor -> InstructorResponseDTO
+    private List<InstructorResponseDTO> getInstructorResponseDto(
+            List<Instructor> instructors) {
 
-	    String role = currentuserService.getCurrentRole();
+        List<InstructorResponseDTO> response = new ArrayList<>();
 
-	    List<Course> courses;
+        for (Instructor instr : instructors) {
 
-	    if (role.equals("SUPER_ADMIN")) {
+            InstructorResponseDTO dto = new InstructorResponseDTO();
 
-	        courses = repo.findByActiveTrue();
+            dto.setId(instr.getId());
+            dto.setName(instr.getName());
+            dto.setEmail(instr.getEmail());
+            dto.setPhone(instr.getPhone());
+            dto.setExpertise(instr.getExpertise());
 
-	    } else {
+            response.add(dto);
+        }
 
-	        Long tenantId = currentuserService.getCurrentTenantId();
+        return response;
+    }
 
-	        courses = repo.findByTenant_IdAndActiveTrue(tenantId);
-	    }
+    // Course -> CourseResponseDTO
+    private CourseResponseDTO getcourseResponseDto(Course cs) {
 
-	    return getcourseRespnseDto(courses);
-	}
+        CourseResponseDTO dto = new CourseResponseDTO();
 
-	@Override
-	public String updateCourseid(Long id, CourseRequestDTO course) {
-		
-	     Optional<Course> optional = repo.findByIdAndActiveTrue(id);
-	     if(optional.isPresent()) {
-	    	 Course existingCourse = optional.get();
-                
-	    	 String role=currentuserService.getCurrentRole();
-	 		if(!role.equals("SUPER_ADMIN")) {
-	 			Long tenantId=currentuserService.getCurrentTenantId();
-	 			if(!tenantId.equals(existingCourse.getTenant().getId())) {
-	 				throw new TenantMismatchExcpetion("Tenant  mismatch");
-	 			}
-	 		}
-	            existingCourse.setName(course.getName());
-	            existingCourse.setDescription(course.getDescription());
-	            existingCourse.setDuration(course.getDuration());
-	            existingCourse.setPrice(course.getPrice());
+        dto.setActive(cs.getActive());
+        dto.setId(cs.getId());
+        dto.setName(cs.getName());
+        dto.setPrice(cs.getPrice());
+        dto.setDescription(cs.getDescription());
+        dto.setDuration(cs.getDuration());
+        dto.setInstructors(
+                getInstructorResponseDto(cs.getInstructors())
+        );
 
-	            repo.save(existingCourse);
-	    	 return "course with given id updated successfully";
-	     }
-	     throw new CourseNotFoundException(
-	    		    "Course with id " + id + "  not found!"
-	    		);
-	}
+        return dto;
+    }
 
-	@Override
-	public String deleteCoursebyid(Long id) {
-		Optional<Course> optional = repo.findByIdAndActiveTrue(id);
-		if(optional.isPresent()) {
-			 String role=currentuserService.getCurrentRole();
-		 		if(!role.equals("SUPER_ADMIN")) {
-		 			Long tenantId=currentuserService.getCurrentTenantId();
-		 			if(!tenantId.equals(optional.get().getTenant().getId())) {
-		 				throw new TenantMismatchExcpetion("Tenant  mismatch");
-		 			}
-		 		}
-		    optional.get().setActive(false);
-		    repo.save(optional.get());
-			
-			return "Course with given id,deactivated sucessfully!";
-		}
-		throw new CourseNotFoundException(
-			    "Course with id " + id + " is not found!"
-			);
-	}
+    // List<Course> -> List<CourseResponseDTO>
+    private List<CourseResponseDTO> getcourseRespnseDto(
+            List<Course> courses) {
 
-	@Override
-	public List<CourseResponseDTO> fetchByTenet_id(Long tenetId) {
-		
-		 String role=currentuserService.getCurrentRole();
-	 		if(!role.equals("SUPER_ADMIN")) {
-	 			Long tenantId=currentuserService.getCurrentTenantId();
-	 			if(!tenantId.equals(tenetId)) {
-	 				throw new TenantMismatchExcpetion("Tenant  mismatch");
-	 			}
-	 		}
-	 		List<Course>courses=repo.findByTenant_IdAndActiveTrue(tenetId);
-		List<CourseResponseDTO>response=getcourseRespnseDto(courses);
-		
-		return response;
-	}
+        List<CourseResponseDTO> response = new ArrayList<>();
 
-	@Override
-	public String assignInstructors(Long courseId, List<Long> instructorIds) {
-		   Optional<Course> opt = repo.findByIdAndActiveTrue(courseId);
-		   if(opt.isEmpty()) {
-			   throw new CourseNotFoundException("Course with id: "+ courseId +"Not found");
-		   }
-		   String role=currentuserService.getCurrentRole();
-	 		if(!role.equals("SUPER_ADMIN")) {
-	 			Long tenantId=currentuserService.getCurrentTenantId();
-	 			if(!tenantId.equals(opt.get().getTenant().getId())) {
-	 				throw new TenantMismatchExcpetion("Tenant  mismatch");
-	 			}
-	 		}
-		  
-		   
-		   List<Instructor>instructors=instrepo.findAllById(instructorIds);
-		   
-		   if(instructors.size()!=instructorIds.size()) {
-			   throw new InstructorNotFoundException("one or more instructor Not Found");
-		   }
-		   Course course=opt.get();
-		   
-		   Long courseTenetId=course.getTenant().getId();
-		   
-		   //checking whether tenant and instructor belong to same tenant or not.
-		   for(Instructor instr:instructors) {
-			   Long instructorTenetId=instr.getTenant().getId();
-			   if(!instructorTenetId.equals(courseTenetId)) {
-				   throw new TenantMismatchExcpetion("course and instructor belong to differnt tenants");
-			   }
-		   }
-		   
-		   // preventing duplicate instructor insertion
-		   for(Instructor instr:instructors) {
-			   if(!course.getInstructors().contains(instr)) {
-				   course.getInstructors().add(instr);
-			   }
-		   }
-		   
-		repo.save(course);
-		 return "Instructors successfully assigned to course with id: " + courseId;
-	}
+        for (Course cs : courses) {
 
-	@Override
-	public List<CourseResponseDTO> fetchbyisntructorid(Long instructorId) {
+            response.add(getcourseResponseDto(cs));
+        }
 
-	    Optional<Instructor> optional = instrepo.findById(instructorId);
+        return response;
+    }
 
-	    if(optional.isEmpty()) {
+    @Override
+    public String CreateCourse(Long tenant_id, CourseRequestDTO course) {
 
-	        throw new InstructorNotFoundException(
-	            "insturcotor with id:"+instructorId+"not found"
-	        );
-	    }
+        Optional<Tenant> optional = tenantrepo.findById(tenant_id);
 
-	    String role = currentuserService.getCurrentRole();
+        if (optional.isEmpty()) {
+            throw new TenantNotFoundException(
+                    "Tenant with id:" + tenant_id + "Not found ");
+        }
 
-	    Long tenantId = currentuserService.getCurrentTenantId();
+        Tenant tenant = optional.get();
 
-	    if(role.equals("INSTRUCTOR")) {
+        String role = currentuserService.getCurrentRole();
 
-	    	//Not necessary
-//	        if(!tenantId.equals(optional.get().getTenant().getId())) {
-//
-//	            throw new TenantMismatchExcpetion(
-//	                "tenant mismatch"
-//	            );
-//	        }
+        if (!role.equals("SUPER_ADMIN")) {
 
-	        Long currentuserId =
-	                currentuserService.getCurrentUserId();
+            Long tenantId = currentuserService.getCurrentTenantId();
 
-	        Optional<Instructor> currentInstructor =
-	                instrepo.findByUser_Id(currentuserId);
+            if (!tenantId.equals(tenant.getId())) {
+                throw new TenantMismatchExcpetion("Tenant  mismatch");
+            }
+        }
 
-	        if(currentInstructor.isEmpty()) {
+        Course newcourse = new Course();
 
-	            throw new InstructorNotFoundException(
-	                "Instructor profile not found"
-	            );
-	        }
+        newcourse.setName(course.getName());
+        newcourse.setPrice(course.getPrice());
+        newcourse.setDescription(course.getDescription());
+        newcourse.setDuration(course.getDuration());
+        newcourse.setTenant(tenant);
 
-	        if(!currentInstructor.get().getId().equals(instructorId)) {
+        Course c = repo.save(newcourse);
 
-	            throw new TenantMismatchExcpetion(
-	                "Instructor can only access their own courses"
-	            );
-	        }
-	    }
+        return "course added successfully with id:" + c.getId();
+    }
 
-	    if(!role.equals("SUPER_ADMIN") && !role.equals("INSTRUCTOR")) {
+    @Override
+    public CourseResponseDTO getCourseByid(Long id) {
 
-	        if(!tenantId.equals(optional.get().getTenant().getId())) {
+        Optional<Course> optional = repo.findByIdAndActiveTrue(id);
 
-	            throw new TenantMismatchExcpetion(
-	                "Tenant mismatch"
-	            );
-	        }
-	    }
+        if (optional.isEmpty()) {
 
-	    List<Course> courses =
-	            repo.findByInstructors_id(instructorId);
+            throw new CourseNotFoundException(
+                    "Course with id:" + id + " not found");
+        }
 
-	    List<CourseResponseDTO> response =
-	            getcourseRespnseDto(courses);
+        Course cs = optional.get();
 
-	    return response;
-	}
-	@Override
-	public String removeInstructor(Long courseId, Long instructorId) {
+        String role = currentuserService.getCurrentRole();
 
-	    Optional<Course> courseOptional =
-	            repo.findByIdAndActiveTrue(courseId);
+        if (!role.equals("SUPER_ADMIN")) {
 
-	    if (courseOptional.isEmpty()) {
+            Long tenantId = currentuserService.getCurrentTenantId();
 
-	        throw new CourseNotFoundException(
-	            "Course with id: " + courseId + " not found"
-	        );
-	    }
+            if (!tenantId.equals(cs.getTenant().getId())) {
+                throw new TenantMismatchExcpetion("Tenant  mismatch");
+            }
+        }
 
-	    Optional<Instructor> instructorOptional =
-	            instrepo.findById(instructorId);
+        return getcourseResponseDto(cs);
+    }
 
-	    if (instructorOptional.isEmpty()) {
+    @Override
+    public Page<CourseResponseDTO> getAllCourse(Pageable pageable) {
 
-	        throw new InstructorNotFoundException(
-	            "Instructor with id: " + instructorId + " not found"
-	        );
-	    }
+        String role = currentuserService.getCurrentRole();
 
-	    Course course = courseOptional.get();
+        Page<Course> courses;
 
-	    Instructor instructor = instructorOptional.get();
+        if (role.equals("SUPER_ADMIN")) {
 
-	    String role = currentuserService.getCurrentRole();
+            courses = repo.findByActiveTrue(pageable);
 
-	    if (!role.equals("SUPER_ADMIN")) {
+        } else {
 
-	        Long tenantId =
-	                currentuserService.getCurrentTenantId();
+            Long tenantId = currentuserService.getCurrentTenantId();
 
-	        if (!tenantId.equals(course.getTenant().getId())) {
+            courses = repo.findByTenant_IdAndActiveTrue(
+                    tenantId,
+                    pageable);
+        }
 
-	            throw new TenantMismatchExcpetion(
-	                "Tenant mismatch"
-	            );
-	        }
-	    }
+        return courses.map(this::getcourseResponseDto);
+    }
 
-	    if (!course.getTenant().getId()
-	            .equals(instructor.getTenant().getId())) {
+    @Override
+    public String updateCourseid(Long id, CourseRequestDTO course) {
 
-	        throw new TenantMismatchExcpetion(
-	            "Course and Instructor belong to different tenants"
-	        );
-	    }
+        Optional<Course> optional = repo.findByIdAndActiveTrue(id);
 
-	    if (!course.getInstructors().contains(instructor)) {
+        if (optional.isPresent()) {
 
-	        throw new InstructorNotFoundException(
-	            "Instructor is not assigned to this course"
-	        );
-	    }
+            Course existingCourse = optional.get();
 
-	    course.getInstructors().remove(instructor);
+            String role = currentuserService.getCurrentRole();
 
-	    repo.save(course);
+            if (!role.equals("SUPER_ADMIN")) {
 
-	    return "Instructor removed from course successfully";
-	}
-	
+                Long tenantId = currentuserService.getCurrentTenantId();
 
+                if (!tenantId.equals(existingCourse.getTenant().getId())) {
+                    throw new TenantMismatchExcpetion("Tenant  mismatch");
+                }
+            }
+
+            existingCourse.setName(course.getName());
+            existingCourse.setDescription(course.getDescription());
+            existingCourse.setDuration(course.getDuration());
+            existingCourse.setPrice(course.getPrice());
+
+            repo.save(existingCourse);
+
+            return "course with given id updated successfully";
+        }
+
+        throw new CourseNotFoundException(
+                "Course with id " + id + "  not found!");
+    }
+
+    @Override
+    public String deleteCoursebyid(Long id) {
+
+        Optional<Course> optional = repo.findByIdAndActiveTrue(id);
+
+        if (optional.isPresent()) {
+
+            String role = currentuserService.getCurrentRole();
+
+            if (!role.equals("SUPER_ADMIN")) {
+
+                Long tenantId = currentuserService.getCurrentTenantId();
+
+                if (!tenantId.equals(optional.get().getTenant().getId())) {
+                    throw new TenantMismatchExcpetion("Tenant  mismatch");
+                }
+            }
+
+            optional.get().setActive(false);
+
+            repo.save(optional.get());
+
+            return "Course with given id,deactivated sucessfully!";
+        }
+
+        throw new CourseNotFoundException(
+                "Course with id " + id + " is not found!");
+    }
+
+    @Override
+    public List<CourseResponseDTO> fetchByTenet_id(Long tenetId) {
+
+        String role = currentuserService.getCurrentRole();
+
+        if (!role.equals("SUPER_ADMIN")) {
+
+            Long tenantId = currentuserService.getCurrentTenantId();
+
+            if (!tenantId.equals(tenetId)) {
+                throw new TenantMismatchExcpetion("Tenant  mismatch");
+            }
+        }
+
+        List<Course> courses =
+                repo.findByTenant_IdAndActiveTrue(tenetId);
+
+        List<CourseResponseDTO> response =
+                getcourseRespnseDto(courses);
+
+        return response;
+    }
+
+    @Override
+    public String assignInstructors(
+            Long courseId,
+            List<Long> instructorIds) {
+
+        Optional<Course> opt =
+                repo.findByIdAndActiveTrue(courseId);
+
+        if (opt.isEmpty()) {
+
+            throw new CourseNotFoundException(
+                    "Course with id: " + courseId + "Not found");
+        }
+
+        String role = currentuserService.getCurrentRole();
+
+        if (!role.equals("SUPER_ADMIN")) {
+
+            Long tenantId =
+                    currentuserService.getCurrentTenantId();
+
+            if (!tenantId.equals(opt.get().getTenant().getId())) {
+                throw new TenantMismatchExcpetion("Tenant  mismatch");
+            }
+        }
+
+        List<Instructor> instructors =
+                instrepo.findAllById(instructorIds);
+
+        if (instructors.size() != instructorIds.size()) {
+
+            throw new InstructorNotFoundException(
+                    "one or more instructor Not Found");
+        }
+
+        Course course = opt.get();
+
+        Long courseTenetId =
+                course.getTenant().getId();
+
+        // checking whether tenant and instructor belong
+        // to same tenant or not.
+        for (Instructor instr : instructors) {
+
+            Long instructorTenetId =
+                    instr.getTenant().getId();
+
+            if (!instructorTenetId.equals(courseTenetId)) {
+
+                throw new TenantMismatchExcpetion(
+                        "course and instructor belong to differnt tenants");
+            }
+        }
+
+        // preventing duplicate instructor insertion
+        for (Instructor instr : instructors) {
+
+            if (!course.getInstructors().contains(instr)) {
+
+                course.getInstructors().add(instr);
+            }
+        }
+
+        repo.save(course);
+
+        return "Instructors successfully assigned to course with id: "
+                + courseId;
+    }
+
+    @Override
+    public List<CourseResponseDTO> fetchbyisntructorid(
+            Long instructorId) {
+
+        Optional<Instructor> optional =
+                instrepo.findById(instructorId);
+
+        if (optional.isEmpty()) {
+
+            throw new InstructorNotFoundException(
+                    "insturcotor with id:" + instructorId
+                            + "not found");
+        }
+
+        String role = currentuserService.getCurrentRole();
+
+        Long tenantId =
+                currentuserService.getCurrentTenantId();
+
+        if (role.equals("INSTRUCTOR")) {
+
+            Long currentuserId =
+                    currentuserService.getCurrentUserId();
+
+            Optional<Instructor> currentInstructor =
+                    instrepo.findByUser_Id(currentuserId);
+
+            if (currentInstructor.isEmpty()) {
+
+                throw new InstructorNotFoundException(
+                        "Instructor profile not found");
+            }
+
+            if (!currentInstructor.get().getId()
+                    .equals(instructorId)) {
+
+                throw new TenantMismatchExcpetion(
+                        "Instructor can only access their own courses");
+            }
+        }
+
+        if (!role.equals("SUPER_ADMIN")
+                && !role.equals("INSTRUCTOR")) {
+
+            if (!tenantId.equals(
+                    optional.get().getTenant().getId())) {
+
+                throw new TenantMismatchExcpetion(
+                        "Tenant mismatch");
+            }
+        }
+
+        List<Course> courses =
+                repo.findByInstructors_id(instructorId);
+
+        List<CourseResponseDTO> response =
+                getcourseRespnseDto(courses);
+
+        return response;
+    }
+
+    @Override
+    public String removeInstructor(
+            Long courseId,
+            Long instructorId) {
+
+        Optional<Course> courseOptional =
+                repo.findByIdAndActiveTrue(courseId);
+
+        if (courseOptional.isEmpty()) {
+
+            throw new CourseNotFoundException(
+                    "Course with id: " + courseId + " not found");
+        }
+
+        Optional<Instructor> instructorOptional =
+                instrepo.findById(instructorId);
+
+        if (instructorOptional.isEmpty()) {
+
+            throw new InstructorNotFoundException(
+                    "Instructor with id: " + instructorId
+                            + " not found");
+        }
+
+        Course course = courseOptional.get();
+
+        Instructor instructor = instructorOptional.get();
+
+        String role = currentuserService.getCurrentRole();
+
+        if (!role.equals("SUPER_ADMIN")) {
+
+            Long tenantId =
+                    currentuserService.getCurrentTenantId();
+
+            if (!tenantId.equals(course.getTenant().getId())) {
+
+                throw new TenantMismatchExcpetion(
+                        "Tenant mismatch");
+            }
+        }
+
+        if (!course.getTenant().getId()
+                .equals(instructor.getTenant().getId())) {
+
+            throw new TenantMismatchExcpetion(
+                    "Course and Instructor belong to different tenants");
+        }
+
+        if (!course.getInstructors().contains(instructor)) {
+
+            throw new InstructorNotFoundException(
+                    "Instructor is not assigned to this course");
+        }
+
+        course.getInstructors().remove(instructor);
+
+        repo.save(course);
+
+        return "Instructor removed from course successfully";
+    }
 }

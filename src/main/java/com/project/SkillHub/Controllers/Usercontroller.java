@@ -34,13 +34,13 @@ public class Usercontroller {
 		return new ResponseEntity<String>(status,HttpStatus.CREATED);
 		
 	}
-	@PreAuthorize("hasAnyRole('SUPER_ADMIN','TENANT_ADMIN')")
+	@PreAuthorize("hasAnyRole('SUPER_ADMIN','TENANT_ADMIN','INSTRUCTOR','STUDENT')")
 	@GetMapping("/getbyid/{id}")
-	public ResponseEntity<UserResponseDTO>getuserbyid(@PathVariable("id")Long id){
-		
-		UserResponseDTO response=service.getuserbyId(id);
-		return new ResponseEntity<UserResponseDTO>(response,HttpStatus.OK);
-		
+	public ResponseEntity<UserResponseDTO> getuserbyid(@PathVariable("id") Long id) {
+
+	    UserResponseDTO response = service.getuserbyId(id);
+
+	    return new ResponseEntity<UserResponseDTO>(response, HttpStatus.OK);
 	}
 	@PreAuthorize("hasAnyRole('SUPER_ADMIN','TENANT_ADMIN')")
 	@GetMapping("/getall")
