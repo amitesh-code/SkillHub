@@ -5,6 +5,8 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -46,7 +48,18 @@ public class StudentService implements IstudentService {
 	
 	@Autowired
 	private CurrentUserService currentuserService;
-	
+	// student->studentResponseDTO
+		private StudentResponseDTO getStudentResponseDTO(Student st) {
+
+		    StudentResponseDTO sdto = new StudentResponseDTO();
+
+		    sdto.setId(st.getId());
+		    sdto.setName(st.getName());
+		    sdto.setEmail(st.getEmail());
+		    sdto.setPhone(st.getPhone());
+
+		    return sdto;
+		}
 	@Override
 	public String createStudent(Long tenant_id, StudentRequestDTO student) {
 		Optional<Tenant> optional = tenantrepo.findById(tenant_id);
@@ -87,6 +100,7 @@ public class StudentService implements IstudentService {
 
         	}
 	
+	
 
 	@Override
 	public StudentResponseDTO getStudentById(Long id) {
@@ -125,27 +139,19 @@ public class StudentService implements IstudentService {
 	}
 
 	@Override
-	public List<StudentResponseDTO> getAllStudents() {
+	public Page<StudentResponseDTO> getAllStudents(Pageable pageable) {
 		
-		List<Student>students;
+		Page<Student>students;
 		String role=currentuserService.getCurrentRole();
 		if(role.equals("SUPER_ADMIN")) {
-			students=repo.findAll();
+			students=repo.findAll(pageable);
 		}else {
 			Long tenantId=currentuserService.getCurrentTenantId();
-			students=repo.findByTenant_Id(tenantId);
+			students=repo.findByTenant_Id(tenantId,pageable);
 		}
 	
-		List<StudentResponseDTO>response=new ArrayList<>();
-		for(Student st:students) {
-			StudentResponseDTO sdto=new StudentResponseDTO();
-			sdto.setId(st.getId());
-			sdto.setName(st.getName());
-			sdto.setEmail(st.getEmail());
-			sdto.setPhone(st.getPhone());
-			response.add(sdto);
-		}
-	  return 	response;
+		
+	  return 	students.map(this::getStudentResponseDTO);
 	}
 
 	@Override

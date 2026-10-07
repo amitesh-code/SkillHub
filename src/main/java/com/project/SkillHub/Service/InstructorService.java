@@ -5,6 +5,8 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -60,6 +62,16 @@ public class InstructorService implements IinstructorService {
 	        this.instructorRepo=instructorRepo;
 	    }
 
+	    //instructor->instructorResponseDTO
+	    private InstructorResponseDTO getInstructorResponseDTO(Instructor st) {
+	    	InstructorResponseDTO sdto=new InstructorResponseDTO();
+			sdto.setId(st.getId());
+			sdto.setName(st.getName());
+			sdto.setEmail(st.getEmail());
+			sdto.setPhone(st.getPhone());
+		     sdto.setExpertise(st.getExpertise());
+		     return sdto;
+	    }
 	@Override
 	public String createInstructor(Long tenantId, InstructorRequestDTO instructor) {
 		Optional<Tenant> optional = trepo.findById(tenantId);
@@ -142,27 +154,18 @@ public class InstructorService implements IinstructorService {
 	}
 
 	@Override
-	public List<InstructorResponseDTO> getAllInstructors() {
-		List<Instructor>instructor;
+	public Page<InstructorResponseDTO> getAllInstructors(Pageable pageable) {
+		Page<Instructor>instructor;
 		String role=currentuserService.getCurrentRole();
 		if(role.equals("SUPER_ADMIN")) {
-			instructor=repo.findAll();
+			instructor= repo.findAll(pageable);
 		}else {
 			Long tenantId=currentuserService.getCurrentTenantId();
-			instructor=repo.findByTenant_Id(tenantId);
+			instructor=repo.findByTenant_Id(tenantId,pageable);
 		}
 	
-		List<InstructorResponseDTO>response=new ArrayList<>();
-		for(Instructor st:instructor) {
-			InstructorResponseDTO sdto=new InstructorResponseDTO();
-			sdto.setId(st.getId());
-			sdto.setName(st.getName());
-			sdto.setEmail(st.getEmail());
-			sdto.setPhone(st.getPhone());
-		     sdto.setExpertise(st.getExpertise());
-			response.add(sdto);
-		}
-	  return 	response;
+		
+	  return instructor.map(this::getInstructorResponseDTO);
 	}
 
 	@Override

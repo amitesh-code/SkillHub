@@ -3,6 +3,8 @@ package com.project.SkillHub.Controllers;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -19,10 +21,17 @@ import com.project.SkillHub.DTO.InstructorRequestDTO;
 import com.project.SkillHub.DTO.InstructorResponseDTO;
 import com.project.SkillHub.Service.IinstructorService;
 
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 
 @RestController
+@SecurityRequirement(name = "bearerAuth")
 @RequestMapping("/InstructorController")
+@Tag(
+	    name = "Instructor Management",
+	    description = "APIs for managing instructors"
+	)
 public class Instructorcontroller {
 
     @Autowired
@@ -49,12 +58,12 @@ public class Instructorcontroller {
 
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'TENANT_ADMIN')")
     @GetMapping("/getall")
-    public ResponseEntity<List> getAllInstructors() {
+    public ResponseEntity<Page<InstructorResponseDTO>> getAllInstructors(Pageable pageable) {
 
-        List<InstructorResponseDTO> ls =
-                service.getAllInstructors();
+        Page<InstructorResponseDTO> ls =
+                service.getAllInstructors(pageable);
 
-        return new ResponseEntity<List>(
+        return new ResponseEntity<Page<InstructorResponseDTO>>(
                 ls,
                 HttpStatus.OK
         );

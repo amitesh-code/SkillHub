@@ -16,10 +16,15 @@ import com.project.SkillHub.Security.JwtService;
 import com.project.SkillHub.Security.UserPrincipal;
 import com.project.SkillHub.Service.AuthService;
 
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/auth")
+@Tag(
+	    name = "Authentication",
+	    description = "APIs for user authentication"
+	)
 public class AuthController {
 
 	private AuthService authservice;

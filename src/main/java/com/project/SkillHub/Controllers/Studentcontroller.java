@@ -3,6 +3,8 @@ package com.project.SkillHub.Controllers;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -20,10 +22,17 @@ import com.project.SkillHub.DTO.StudentResponseDTO;
 import com.project.SkillHub.Model.Student;
 import com.project.SkillHub.Service.IstudentService;
 
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 
 @RestController
+@SecurityRequirement(name = "bearerAuth")
 @RequestMapping("/StudentController")
+@Tag(
+	    name = "Student Management",
+	    description = "APIs for managing students"
+	)
 public class Studentcontroller {
 	 private IstudentService service;
 
@@ -45,11 +54,11 @@ public class Studentcontroller {
 
 	    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'TENANT_ADMIN')")
 	    @GetMapping("/getall")
-	    public ResponseEntity<List<StudentResponseDTO>> getAllStudents() {
+	    public ResponseEntity<Page<StudentResponseDTO>> getAllStudents(Pageable pageable) {
 
-	        List<StudentResponseDTO> students = service.getAllStudents();
+	        Page<StudentResponseDTO> students = service.getAllStudents(pageable);
 
-	        return new ResponseEntity<List<StudentResponseDTO>>(students, HttpStatus.OK);
+	        return new ResponseEntity<Page<StudentResponseDTO>>(students, HttpStatus.OK);
 	    }
 
 	    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'TENANT_ADMIN','STUDENT')")

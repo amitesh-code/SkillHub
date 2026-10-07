@@ -3,6 +3,8 @@ package com.project.SkillHub.Controllers;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -24,10 +26,17 @@ import com.project.SkillHub.Model.Enrollment;
 import com.project.SkillHub.Model.Student;
 import com.project.SkillHub.Service.IenrollmentService;
 
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 
 @RestController
+@SecurityRequirement(name = "bearerAuth")
 @RequestMapping("/EnrollmentController")
+@Tag(
+	    name = "Enrollment Management",
+	    description = "APIs for managing enrollments"
+	)
 public class Enrollmentcontroller {
     @Autowired
 	IenrollmentService service;
@@ -46,11 +55,11 @@ public class Enrollmentcontroller {
 
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'TENANT_ADMIN')")
     @GetMapping("/getall")
-    public ResponseEntity<List<EnrollmentResponseDTO>> getAllEnrollments() {
+    public ResponseEntity<Page<EnrollmentResponseDTO>> getAllEnrollments(Pageable pageable) {
 
-        List<EnrollmentResponseDTO> enrollments = service.getAllEnrollments();
+        Page<EnrollmentResponseDTO> enrollments = service.getAllEnrollments(pageable);
 
-        return new ResponseEntity<List<EnrollmentResponseDTO>>(
+        return new ResponseEntity<Page<EnrollmentResponseDTO>>(
                 enrollments, HttpStatus.OK);
     }
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'TENANT_ADMIN', 'STUDENT','INSTRUCTOR')")

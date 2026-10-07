@@ -20,12 +20,19 @@ import com.project.SkillHub.DTO.CourseResponseDTO;
 import com.project.SkillHub.Model.Course;
 import com.project.SkillHub.Service.IcourseService;
 
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 
 import java.util.List;
 
 @RestController
+@SecurityRequirement(name = "bearerAuth")// for swagger API
 @RequestMapping("/CourseController")
+@Tag(
+	    name = "Course Management",
+	    description = "APIs for managing courses"
+	)
 public class Courscontroller {
     
 	

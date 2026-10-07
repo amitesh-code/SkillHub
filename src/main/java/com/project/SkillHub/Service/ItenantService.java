@@ -2,6 +2,9 @@ package com.project.SkillHub.Service;
 
 import java.util.List;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+
 import com.project.SkillHub.Model.Tenant;
 
 public interface ItenantService {
@@ -10,7 +13,7 @@ public interface ItenantService {
 
     Tenant getTenantById(Long id);
 
-    List<Tenant> getAllTenants();
+    Page<Tenant> getAllTenants(Pageable pageable);
 
     String updateTenant(Long id, Tenant tenant);
 

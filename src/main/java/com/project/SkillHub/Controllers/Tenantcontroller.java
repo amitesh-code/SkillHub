@@ -3,6 +3,8 @@ package com.project.SkillHub.Controllers;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -18,10 +20,17 @@ import org.springframework.web.bind.annotation.RestController;
 import com.project.SkillHub.Model.Tenant;
 import com.project.SkillHub.Service.ItenantService;
 
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 
 @RestController
+@SecurityRequirement(name = "bearerAuth")
 @RequestMapping("/TenantController")
+@Tag(
+	    name = "Tenant Management",
+	    description = "APIs for managing tenants"
+	)
 public class Tenantcontroller {
 
 	ItenantService service;
@@ -44,9 +53,9 @@ public class Tenantcontroller {
 	
 	@PreAuthorize("hasRole('SUPER_ADMIN')")
 	@GetMapping("/getall")
-	public ResponseEntity<List>getAllTenant(){
-		List<Tenant>ls=service.getAllTenants();
-		return new ResponseEntity<List>(ls,HttpStatus.OK);
+	public ResponseEntity<Page<Tenant>>getAllTenant(Pageable pageable){
+		Page<Tenant>ls=service.getAllTenants(pageable);
+		return new ResponseEntity<Page<Tenant>>(ls,HttpStatus.OK);
 	}
 	@PreAuthorize("hasAnyRole('SUPER_ADMIN', 'TENANT_ADMIN')")
 	@GetMapping("/getbyid/{id}")

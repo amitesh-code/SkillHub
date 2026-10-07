@@ -7,6 +7,8 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import com.project.SkillHub.DTO.CourseResponseDTO;
@@ -47,6 +49,16 @@ public class EnrollmentService implements IenrollmentService {
 		this.courserepo = courserepo;
 		this.currentuserService=currentuserService;
 		this.instructorrepo=instructorrepo;
+	}
+	//Enrollment->EnrollmentResponseDTO
+	private EnrollmentResponseDTO getEnrollmentResponseDTO(Enrollment enrl) {
+		EnrollmentResponseDTO enr = new EnrollmentResponseDTO();
+    	enr.setCourse(getcourseresponsedto(enrl.getCourse()));
+    	enr.setId(enrl.getId());
+    	enr.setStatus(enrl.getStatus().name());
+    	enr.setStudent(getstudentresponsedto(enrl.getStudent()));
+    	enr.setEnrollmentDate(enrl.getEnrollmentDate());
+        return enr;
 	}
 	//Instructor->InstructorResponseDTO
 	private List<InstructorResponseDTO>getInstructorResponseDto(List<Instructor>instructors) {
@@ -242,27 +254,19 @@ public class EnrollmentService implements IenrollmentService {
 	    return dto;
 	}
 	@Override
-	public List<EnrollmentResponseDTO> getAllEnrollments() {
-         List<Enrollment>enrollments;
+	public Page<EnrollmentResponseDTO> getAllEnrollments(Pageable pageable) {
+         Page<Enrollment>enrollments;
          String role=currentuserService.getCurrentRole();
          if(role.equals("SUPER_ADMIN")) {
-        	 enrollments=repo.findAll();
+        	 enrollments=repo.findAll(pageable);
          }else {
         	 Long tenantId=currentuserService.getCurrentTenantId();
-        	 enrollments=repo.findByStudent_Tenant_Id(tenantId);
+        	 enrollments=repo.findByStudent_Tenant_Id(tenantId,pageable);
          }
 	 
-	    List<EnrollmentResponseDTO>response=new ArrayList<>();
-	    for(Enrollment enrl:enrollments) {
-	    	EnrollmentResponseDTO enr = new EnrollmentResponseDTO();
-	    	enr.setCourse(getcourseresponsedto(enrl.getCourse()));
-	    	enr.setId(enrl.getId());
-	    	enr.setStatus(enrl.getStatus().name());
-	    	enr.setStudent(getstudentresponsedto(enrl.getStudent()));
-	    	enr.setEnrollmentDate(enrl.getEnrollmentDate());
-	    	response.add(enr);
-	    }
-	    return response;
+	   
+	   
+	    return enrollments.map(this::getEnrollmentResponseDTO);
 	}
 
 	@Override

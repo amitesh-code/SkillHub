@@ -2,6 +2,9 @@ package com.project.SkillHub.Service;
 
 import java.util.List;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+
 import com.project.SkillHub.DTO.StudentRequestDTO;
 import com.project.SkillHub.DTO.StudentResponseDTO;
 import com.project.SkillHub.Model.Course;
@@ -12,7 +15,7 @@ public interface IstudentService {
 
     StudentResponseDTO getStudentById(Long id);
 
-    List<StudentResponseDTO> getAllStudents();
+    Page<StudentResponseDTO> getAllStudents(Pageable pageable);
 
     List<StudentResponseDTO> getStudentsByTenantId(Long tenantId);
 

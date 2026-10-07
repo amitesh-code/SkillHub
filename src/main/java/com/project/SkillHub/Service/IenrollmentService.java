@@ -2,6 +2,9 @@ package com.project.SkillHub.Service;
 
 import java.util.List;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+
 import com.project.SkillHub.DTO.CourseResponseDTO;
 import com.project.SkillHub.DTO.EnrollmentRequestDTO;
 import com.project.SkillHub.DTO.EnrollmentResponseDTO;
@@ -15,7 +18,7 @@ public interface IenrollmentService {
 
 	    EnrollmentResponseDTO getEnrollmentById(Long id);
 
-	    List<EnrollmentResponseDTO> getAllEnrollments();
+	    Page<EnrollmentResponseDTO> getAllEnrollments(Pageable pageable);
 
 	    String updateEnrollment(Long id, Enrollment enrollment);
 

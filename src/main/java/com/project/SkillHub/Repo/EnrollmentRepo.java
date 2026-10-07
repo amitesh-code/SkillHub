@@ -2,6 +2,8 @@ package com.project.SkillHub.Repo;
 
 import java.util.List;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import com.project.SkillHub.Model.Enrollment;
@@ -25,6 +27,7 @@ public interface EnrollmentRepo extends JpaRepository<Enrollment, Long> {
     List<Enrollment> findByStudent_Id(Long studentId);
     
     List<Enrollment>findByStudent_Tenant_Id(Long tenantId);
+    Page<Enrollment>findByStudent_Tenant_Id(Long tenantId,Pageable pageable);
     boolean existsByStudent_Id(Long studentId);
     
 }

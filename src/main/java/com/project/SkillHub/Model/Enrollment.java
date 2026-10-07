@@ -28,11 +28,11 @@ public class Enrollment {
 
 
 	@ManyToOne
-    @JoinColumn(name="student_id")
+    @JoinColumn(name="student_id",nullable=false)
     private Student student;
     
     @ManyToOne
-    @JoinColumn(name="course_id")
+    @JoinColumn(name="course_id",nullable=false)
     private Course course;
     
     

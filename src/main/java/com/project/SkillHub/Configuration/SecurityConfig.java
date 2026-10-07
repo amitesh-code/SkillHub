@@ -57,7 +57,9 @@ public class SecurityConfig {
         // Authorization rules
         http.authorizeHttpRequests(auth ->
             auth
-                .requestMatchers("/auth/**").permitAll()
+                .requestMatchers("/auth/**",
+                        "/swagger-ui/**",
+                        "/v3/api-docs/**").permitAll()
                 .anyRequest().authenticated()
         );
 

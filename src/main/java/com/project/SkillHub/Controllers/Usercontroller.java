@@ -18,8 +18,16 @@ import com.project.SkillHub.DTO.CreateTenantUserDTO;
 import com.project.SkillHub.DTO.UserResponseDTO;
 import com.project.SkillHub.Service.IuserService;
 
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
+
 @RestController
+@SecurityRequirement(name = "bearerAuth")
 @RequestMapping("/usercontroller")
+@Tag(
+	    name = "User Management",
+	    description = "APIs for managing users"
+	)
 public class Usercontroller {
 
 	
