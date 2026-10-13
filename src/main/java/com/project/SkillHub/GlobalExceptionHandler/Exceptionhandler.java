@@ -6,6 +6,7 @@ import java.util.stream.Collectors;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -80,7 +81,7 @@ public class Exceptionhandler {
 				 .collect(Collectors.joining(","));
 		ErrorDetails erd=new ErrorDetails("403 Bad Request",message,LocalDateTime.now());
 		
-		return new ResponseEntity<ErrorDetails>(erd,HttpStatus.FORBIDDEN);
+		return new ResponseEntity<ErrorDetails>(erd,HttpStatus.BAD_REQUEST);
 	}
 	@ExceptionHandler(Exception.class)
 	public ResponseEntity<ErrorDetails>handleException(Exception ex){
@@ -148,5 +149,13 @@ public class Exceptionhandler {
 	        erd,
 	        HttpStatus.CONFLICT
 	    );
+	}
+	@ExceptionHandler(BadCredentialsException.class)
+	public ResponseEntity<String> handleBadCredentials(
+	        BadCredentialsException ex) {
+
+	    return ResponseEntity
+	            .status(HttpStatus.UNAUTHORIZED)
+	            .body("Invalid email or password");
 	}
 }
