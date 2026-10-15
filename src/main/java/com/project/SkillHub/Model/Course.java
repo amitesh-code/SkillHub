@@ -44,11 +44,11 @@ public class Course {
    
    @ManyToMany
    @JoinTable(
-		   name="Course_Instrucotr",
-		   joinColumns=@JoinColumn(name="course_id"),
-		   inverseJoinColumns=@JoinColumn(name="instructor_id")
+       name = "course_instructor",
+       joinColumns = @JoinColumn(name = "course_id"),
+       inverseJoinColumns = @JoinColumn(name = "instructor_id")
    )
-   List<Instructor>instructors=new ArrayList<>();
+   private List<Instructor> instructors = new ArrayList<>();
    
    public List<Instructor> getInstructors() {
 	return instructors;
