@@ -1,6 +1,6 @@
 # SkillHub
 
-A multi-tenant education management system built using Java and Spring Boot. SkillHub provides REST APIs to manage tenants, students, instructors, courses, user accounts, and enrollments.
+It is a multi-tenant education and training management system built with Spring Boot that provides secure management of tenants, students, instructors, courses, and enrollments through RESTful APIs. It features JWT-based authentication, role-based authorization, PostgreSQL integration, input validation, pagination, and centralized exception handling.
 
 Live API: https://skillhub-yd1u.onrender.com/skillhub
 
