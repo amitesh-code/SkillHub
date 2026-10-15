@@ -2,9 +2,11 @@
 
 A multi-tenant education management system built using Java and Spring Boot. SkillHub provides REST APIs to manage tenants, students, instructors, courses, user accounts, and enrollments.
 
-**Live API:** [https://skillhub-yd1u.onrender.com/skillhub](https://skillhub-yd1u.onrender.com/skillhub)
-**Swagger UI:** [https://skillhub-yd1u.onrender.com/skillhub/swagger-ui/index.html](https://skillhub-yd1u.onrender.com/skillhub/swagger-ui/index.html)
-**GitHub:** [https://github.com/amitesh-code/SkillHub](https://github.com/amitesh-code/SkillHub)
+Live API: https://skillhub-yd1u.onrender.com/skillhub
+
+Swagger UI: https://skillhub-yd1u.onrender.com/skillhub/swagger-ui/index.html
+
+GitHub: https://github.com/amitesh-code/SkillHub
 
 ## 🚀 Features
 
